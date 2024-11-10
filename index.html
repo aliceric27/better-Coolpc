@@ -15,6 +15,7 @@
   <script src="//cdn.jsdelivr.net/npm/element-plus"></script>
     <style>
         .component-select {
+            max-width: 60vw;
         }
 
         .el-select-dropdown__item {
@@ -151,6 +152,36 @@
                 max-width: 360px;
             }
         }
+
+        /* 新增价格显示相关样式 */
+        .component-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;  /* 元素之间的间距 */
+        }
+
+        .price-display {
+            min-width: 100px;
+            padding: 8px 12px;
+            background-color: #f5f7fa;
+            border-radius: 4px;
+            color: #67C23A;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        /* 移动端适配 */
+        @media screen and (max-width: 480px) {
+            .component-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .price-display {
+                margin-top: 5px;
+                text-align: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -172,25 +203,36 @@
                         <span>{{ component.title }}</span>
                     </el-col>
                     <el-col :xs="20" :sm="18">
-                        <el-select
-                            v-model="selectedComponents[component.title]"
-                            :placeholder="'請選擇' + component.title"
-                            filterable
-                            class="component-select"
-                            clearable>
-                            <el-option
-                                v-for="item in component.data"
-                                :key="item.id"
-                                :label="item.name"
-                                :value="item"
-                                :disabled="item.price === null || item.isGroup"
-                                :class="{ 
-                                    'bundle-price': item.name.includes('搭購價'),
-                                    'option-group': item.isGroup,
-                                    [`color-group-${item.colorGroup}`]: item.colorGroup > 0
-                                }">
-                            </el-option>
-                        </el-select>
+                        <div class="component-container">
+                            <el-select
+                                v-model="selectedComponents[component.title]"
+                                :placeholder="'請選擇' + component.title"
+                                filterable
+                                class="component-select"
+                                clearable
+                                value-key="id">
+                                <template #default="{ item }">
+                                    <el-option
+                                        v-for="item in component.data"
+                                        :key="item.id"
+                                        :label="item.name"
+                                        :value="item"
+                                        :disabled="item.price === null || item.isGroup"
+                                        :class="{ 
+                                            'bundle-price': item.name.includes('搭購價'),
+                                            'option-group': item.isGroup,
+                                            [`color-group-${item.colorGroup}`]: item.colorGroup > 0
+                                        }">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <span>{{ item.name }}</span>
+                                            <span v-if="item.price" style="color: #67C23A; font-weight: bold;">
+                                                ${{ item.price.toLocaleString() }}
+                                            </span>
+                                        </div>
+                                    </el-option>
+                                </template>
+                            </el-select>
+                        </div>
                     </el-col>
                 </el-row>
             </div>
