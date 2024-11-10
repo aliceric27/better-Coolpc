@@ -4,20 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PCBUYBUY</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <!-- 引入 Element Plus -->
-  <!-- Import style -->
-  <link rel="stylesheet" href="//unpkg.com/element-plus/dist/index.css" />
+    <link
+    rel="stylesheet"
+    href="//cdn.jsdelivr.net/npm/element-plus/dist/index.css"
+  />
   <!-- Import Vue 3 -->
-  <script src="//unpkg.com/vue@3"></script>
+  <script src="//cdn.jsdelivr.net/npm/vue@3"></script>
   <!-- Import component library -->
-  <script src="//unpkg.com/element-plus"></script>
+  <script src="//cdn.jsdelivr.net/npm/element-plus"></script>
     <style>
         .component-select {
-            width: 100%;
-            max-width: 500px;
         }
-        
+
         .el-select-dropdown__item {
             color: #000 !important;
         }
@@ -37,6 +36,7 @@
         .el-select-dropdown__item.is-disabled {
             color: #494949 !important;
             background-color: #b6b6b6 !important;
+            font-size: 12px !important;
         }
 
         /* 新增的樣式 */
@@ -72,6 +72,85 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        .option-group {
+            font-weight: bold;
+            background-color: #003c1e !important;
+            color: #676767 !important;
+        }
+
+        /* 增加選擇器的特異性來提高優先級 */
+        .el-select-dropdown__item.option-group {
+            font-weight: bold !important;
+            background-color: #f5f7fa !important;
+            color: #606266 !important;
+        }
+
+        /* 確保 is-disabled 不會覆蓋 option-group 的樣式 */
+        .el-select-dropdown__item.is-disabled:not(.option-group) {
+            color: #595959 !important;
+            background-color: #c9c9c9 !important;
+        }
+
+        /* 定義四種顏色組合 */
+        .color-group-1 {
+            background-color: rgba(64, 158, 255, 0.1) !important;
+        }
+        .color-group-1.option-group {
+            background-color: rgba(64, 158, 255, 0.2) !important;
+        }
+
+        .color-group-2 {
+            background-color: rgba(103, 194, 58, 0.1) !important;
+        }
+        .color-group-2.option-group {
+            background-color: rgba(103, 194, 58, 0.2) !important;
+        }
+
+        .color-group-3 {
+            background-color: rgba(230, 162, 60, 0.1) !important;
+        }
+        .color-group-3.option-group {
+            background-color: rgba(230, 162, 60, 0.2) !important;
+        }
+
+        .color-group-4 {
+            background-color: rgba(245, 108, 108, 0.1) !important;
+        }
+        .color-group-4.option-group {
+            background-color: rgba(245, 108, 108, 0.2) !important;
+        }
+
+        /* is-disabled 的樣式 */
+        .el-select-dropdown__item.is-disabled:not(.option-group) {
+            opacity: 0.7 !important;
+        }
+
+        /* 在 style 區塊中添加 */
+        @media screen and (max-width: 480px) {
+            .component-title {
+                font-size: 14px;
+                padding-right: 5px;
+            }
+            
+            .el-select {
+                width: 100%;  /* 確保 select 填滿容器 */
+            }
+
+            /* 處理選項文字溢出 */
+            .el-select-dropdown__item {
+                white-space: normal !important;  /* 允許文字換行 */
+                height: auto !important;
+                padding: 5px 8px !important;
+                line-height: 1.4 !important;
+            }
+            
+            /* 調整下拉選單寬度 */
+            .el-select-dropdown {
+                width: 90vw !important;  /* 使用視窗寬度的 90% */
+                max-width: 360px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -89,10 +168,10 @@
                 <el-row v-for="component in componentsData" 
                        :key="component.title" 
                        class="component-row">
-                    <el-col :span="6" class="component-title">
+                    <el-col :xs="4" :sm="6" class="component-title">
                         <span>{{ component.title }}</span>
                     </el-col>
-                    <el-col :span="18">
+                    <el-col :xs="20" :sm="18">
                         <el-select
                             v-model="selectedComponents[component.title]"
                             :placeholder="'請選擇' + component.title"
@@ -102,10 +181,14 @@
                             <el-option
                                 v-for="item in component.data"
                                 :key="item.id"
-                                :label="`${item.name}${item.price ? ` - $${item.price}` : ''}`"
+                                :label="item.name"
                                 :value="item"
-                                :disabled="item.price === null"
-                                :class="{ 'bundle-price': item.name.includes('搭購價') }">
+                                :disabled="item.price === null || item.isGroup"
+                                :class="{ 
+                                    'bundle-price': item.name.includes('搭購價'),
+                                    'option-group': item.isGroup,
+                                    [`color-group-${item.colorGroup}`]: item.colorGroup > 0
+                                }">
                             </el-option>
                         </el-select>
                     </el-col>
@@ -128,26 +211,64 @@
                 const processComponentData = (html, selector, componentType) => {
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
+                    
                     const select = doc.querySelector(selector);
                     const data = [];
+                    let currentColorGroup = 0;
+
                     if (!select) {
                         console.error(`找不到 ${componentType} 的選擇器`);
                         return null;
                     }
 
-                    select.querySelectorAll('option').forEach(option => {
-                        const value = option.value;
-                        if (value === '0' || !value) return;
+                    // 處理所有子元素
+                    select.childNodes.forEach(node => {
+                        if (node.nodeName === 'OPTGROUP') {
+                            // 更新顏色組
+                            currentColorGroup = (currentColorGroup % 4) + 1;
+                            
+                            // 添加組標題
+                            data.push({
+                                id: `group_${node.label}`,
+                                name: node.label,
+                                price: null,
+                                isGroup: true,
+                                colorGroup: currentColorGroup
+                            });
+                            
+                            // 處理組內的選項
+                            node.querySelectorAll('option').forEach(option => {
+                                const value = option.value;
+                                if (value === '0' || !value) return;
 
-                        const text = option.textContent;
-                        const priceMatch = text.match(/\$([0-9,]+)/);
-                        const price = priceMatch ? parseInt(priceMatch[1].replace(',', '')) : null;
+                                const text = option.textContent;
+                                const priceMatch = text.match(/\$([0-9,]+)/);
+                                const price = priceMatch ? parseInt(priceMatch[1].replace(',', '')) : null;
 
-                        data.push({
-                            id: value,
-                            name: text.split(',')[0].trim(),
-                            price: price
-                        });
+                                data.push({
+                                    id: value,
+                                    name: text.split(',')[0].trim(),
+                                    price: price,
+                                    isGroup: false,
+                                    colorGroup: currentColorGroup
+                                });
+                            });
+                        } else if (node.nodeName === 'OPTION') {
+                            const value = node.value;
+                            if (value === '0' || !value) return;
+
+                            const text = node.textContent;
+                            const priceMatch = text.match(/\$([0-9,]+)/);
+                            const price = priceMatch ? parseInt(priceMatch[1].replace(',', '')) : null;
+
+                            data.push({
+                                id: value,
+                                name: text.split(',')[0].trim(),
+                                price: price,
+                                isGroup: false,
+                                colorGroup: 0  // 非組內選項不設置顏色
+                            });
+                        }
                     });
                     return { [componentType]: data };
                 };
