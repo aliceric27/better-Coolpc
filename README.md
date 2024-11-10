@@ -2,7 +2,7 @@
 
 [Coolpc](https://www.coolpc.com.tw/evaluate.php)
 
-## 原理
+## 使用技術
 
 - 使用 Cloudflare Workers 取得資料
 - 前端 Dom Parser手工解析整理資料
