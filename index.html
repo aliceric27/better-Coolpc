@@ -128,7 +128,7 @@
             opacity: 0.7 !important;
         }
 
-        /* 在 style 區塊中添加 */
+        /* 在 style 區塊中加 */
         @media screen and (max-width: 480px) {
             .component-title {
                 font-size: 14px;
@@ -196,18 +196,29 @@
             align-items: center;
             gap: 10px;
             margin-bottom: 10px;
+            flex-wrap: nowrap;
         }
 
         /* 移動端適配 */
         @media screen and (max-width: 480px) {
             .component-container {
-                flex-direction: column;
-                align-items: stretch;
+                flex-direction: row;
+                align-items: center;
+            }
+            
+            .component-select {
+                flex: 1;
+                min-width: 0;
+            }
+            
+            .price-display {
+                min-width: 80px;
             }
             
             .selection-controls {
-                margin-top: 5px;
-                justify-content: center;
+                margin-left: 5px;
+                margin-top: 0;
+                flex-shrink: 0;
             }
         }
 
@@ -298,22 +309,35 @@
                                     </el-option>
                                 </template>
                             </el-select>
-                            <div class="price-display" v-if="selection.value">
-                                ${{ selection.value.price?.toLocaleString() || '0' }}
+                            <div class="price-display" v-if="selection.value && selection.value.price">
+                                ${{ selection.value.price.toLocaleString() }}
                             </div>
                             <div class="selection-controls">
-                                <el-icon @click="addSelection(component.title)" v-if="index === getComponentSelections(component.title).length - 1"><Plus /></el-icon>
-                                <el-icon @click="removeSelection(component.title, index)" v-if="getComponentSelections(component.title).length > 1"><Minus /></el-icon>
+                                <el-icon 
+                                @click="addSelection(component.title)"
+                                v-if="index === getComponentSelections(component.title).length - 1"
+                                color="#67C23A"
+                                >
+
+                                <Plus />
+                            </el-icon>
+                                <el-icon 
+                                @click="removeSelection(component.title, index)" 
+                                v-if="getComponentSelections(component.title).length > 1"
+                                color="red"
+                                >
+                                <Minus />
+                            </el-icon>
                             </div>
                         </div>
-                        <div class="total-price-display">
+                        <div class="total-price-display" v-if="calculateComponentTotal(component.title) > 0">
                             總額: ${{ calculateComponentTotal(component.title).toLocaleString() }}
                         </div>
                     </el-col>
                 </el-row>
                 
                 <!-- 新增總金額顯示 -->
-                <el-row class="grand-total-row">
+                <el-row class="grand-total-row" v-if="calculateGrandTotal() > 0">
                     <el-col :span="24">
                         <div class="grand-total-display">
                             總金額: ${{ calculateGrandTotal().toLocaleString() }}
