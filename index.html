@@ -13,6 +13,7 @@
   <script src="//cdn.jsdelivr.net/npm/vue@3"></script>
   <!-- Import component library -->
   <script src="//cdn.jsdelivr.net/npm/element-plus"></script>
+  <script src="//cdn.jsdelivr.net/npm/@element-plus/icons-vue"></script>
     <style>
         .component-select {
             max-width: 60vw;
@@ -182,6 +183,70 @@
                 text-align: center;
             }
         }
+
+        /* 在 style 區塊中添加 */
+        .selection-controls {
+            display: flex;
+            gap: 5px;
+            margin-left: 10px;
+        }
+
+        .component-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        /* 移動端適配 */
+        @media screen and (max-width: 480px) {
+            .component-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .selection-controls {
+                margin-top: 5px;
+                justify-content: center;
+            }
+        }
+
+        .total-price-display {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background-color: #f5f7fa;
+            border-radius: 4px;
+            color: #67C23A;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        @media screen and (max-width: 480px) {
+            .total-price-display {
+                text-align: center;
+                margin-bottom: 15px;
+            }
+        }
+
+        .grand-total-row {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f5f7fa;
+            border-radius: 8px;
+        }
+
+        .grand-total-display {
+            font-size: 1.5em;
+            color: #67C23A;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        @media screen and (max-width: 480px) {
+            .grand-total-display {
+                text-align: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -203,14 +268,15 @@
                         <span>{{ component.title }}</span>
                     </el-col>
                     <el-col :xs="20" :sm="18">
-                        <div class="component-container">
+                        <div class="component-container" v-for="(selection, index) in getComponentSelections(component.title)" :key="index">
                             <el-select
-                                v-model="selectedComponents[component.title]"
+                                v-model="selection.value"
                                 :placeholder="'請選擇' + component.title"
                                 filterable
                                 class="component-select"
                                 clearable
-                                value-key="id">
+                                value-key="id"
+                                @change="() => handleSelectionChange(component.title, index)">
                                 <template #default="{ item }">
                                     <el-option
                                         v-for="item in component.data"
@@ -232,6 +298,25 @@
                                     </el-option>
                                 </template>
                             </el-select>
+                            <div class="price-display" v-if="selection.value">
+                                ${{ selection.value.price?.toLocaleString() || '0' }}
+                            </div>
+                            <div class="selection-controls">
+                                <el-icon @click="addSelection(component.title)" v-if="index === getComponentSelections(component.title).length - 1"><Plus /></el-icon>
+                                <el-icon @click="removeSelection(component.title, index)" v-if="getComponentSelections(component.title).length > 1"><Minus /></el-icon>
+                            </div>
+                        </div>
+                        <div class="total-price-display">
+                            總額: ${{ calculateComponentTotal(component.title).toLocaleString() }}
+                        </div>
+                    </el-col>
+                </el-row>
+                
+                <!-- 新增總金額顯示 -->
+                <el-row class="grand-total-row">
+                    <el-col :span="24">
+                        <div class="grand-total-display">
+                            總金額: ${{ calculateGrandTotal().toLocaleString() }}
                         </div>
                     </el-col>
                 </el-row>
@@ -355,17 +440,66 @@
                     fetchData();
                 });
 
+                // 獲取組件的所有選擇
+                const getComponentSelections = (componentTitle) => {
+                    if (!selectedComponents.value[componentTitle]) {
+                        selectedComponents.value[componentTitle] = [{value: null}];
+                    }
+                    return selectedComponents.value[componentTitle];
+                };
+
+                // 添加新的選擇欄位
+                const addSelection = (componentTitle) => {
+                    selectedComponents.value[componentTitle].push({value: null});
+                };
+
+                // 移除選擇欄位
+                const removeSelection = (componentTitle, index) => {
+                    selectedComponents.value[componentTitle].splice(index, 1);
+                };
+
+                // 處理選擇變更
+                const handleSelectionChange = (componentTitle, index) => {
+                    // 可以在這裡添加額外的邏輯
+                };
+
+                // 計算單個組件的總金額
+                const calculateComponentTotal = (componentTitle) => {
+                    const selections = selectedComponents.value[componentTitle] || [];
+                    return selections.reduce((total, selection) => {
+                        return total + (selection.value?.price || 0);
+                    }, 0);
+                };
+
+                // 計算所有組件的總金額
+                const calculateGrandTotal = () => {
+                    if (!componentsData.value) return 0;
+                    
+                    return componentsData.value.reduce((total, component) => {
+                        return total + calculateComponentTotal(component.title);
+                    }, 0);
+                };
+
                 return {
                     componentsData,
                     error,
                     loading,
-                    selectedComponents
+                    selectedComponents,
+                    getComponentSelections,
+                    addSelection,
+                    removeSelection,
+                    handleSelectionChange,
+                    calculateComponentTotal,
+                    calculateGrandTotal
                 };
             }
         });
 
         // 使用 Element Plus
         app.use(ElementPlus);
+        for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+            app.component(key, component)
+        }
         app.mount('#app');
     </script>
 </body>
