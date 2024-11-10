@@ -10,7 +10,7 @@
     href="//cdn.jsdelivr.net/npm/element-plus/dist/index.css"
   />
   <!-- Import Vue 3 -->
-  <script src="//cdn.jsdelivr.net/npm/vue@3"></script>
+  <script src="//cdn.jsdelivr.neㄐt/npm/vue@3"></script>
   <!-- Import component library -->
   <script src="//cdn.jsdelivr.net/npm/element-plus"></script>
   <script src="//cdn.jsdelivr.net/npm/@element-plus/icons-vue"></script>
@@ -259,6 +259,14 @@
                 text-align: center;
             }
         }
+
+        /* 新增更新時間的樣式 */
+        .update-time {
+            text-align: center;
+            margin: 10px 0;
+            color: #606266;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
@@ -273,6 +281,7 @@
                 <div class="loading-spinner"></div>
             </div>
             <div v-if="componentsData">
+                <div v-if="updateTime" class="update-time">更新時間: {{ updateTime }}</div>
                 <el-row v-for="component in componentsData" 
                        :key="component.title" 
                        class="component-row">
@@ -350,7 +359,7 @@
     </div>
 
     <script>
-        const { createApp, ref, onMounted } = Vue;
+        const { createApp, ref, onMounted} = Vue;
 
         const app = createApp({
             setup() {
@@ -359,6 +368,7 @@
                 const error = ref(null);
                 const loading = ref(true);
                 const selectedComponents = ref({});
+                const updateTime = ref(null);
 
                 const processComponentData = (html, selector, componentType) => {
                     const parser = new DOMParser();
@@ -438,6 +448,10 @@
                         const doc = parser.parseFromString(html, 'text/html');
                         
                         const categories = doc.querySelectorAll('.t');
+                        console.log(doc.querySelector('#Mdy').innerText);
+                        const updateTimeText = doc.querySelector('#Mdy').innerText;
+                        const dateTimeMatch = updateTimeText.match(/\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}/);
+                        updateTime.value = dateTimeMatch ? `${dateTimeMatch[0]}` : '更新時間格式錯誤';
                         const allData = [];
                         
                         for (let i = 0; i < categories.length; i++) {
@@ -510,6 +524,7 @@
                     error,
                     loading,
                     selectedComponents,
+                    updateTime,
                     getComponentSelections,
                     addSelection,
                     removeSelection,
