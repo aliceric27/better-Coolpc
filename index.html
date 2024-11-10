@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PCBUYBUY</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- 引入 Element Plus -->
+  <!-- Import style -->
+  <link rel="stylesheet" href="//unpkg.com/element-plus/dist/index.css" />
+  <!-- Import Vue 3 -->
+  <script src="//unpkg.com/vue@3"></script>
+  <!-- Import component library -->
+  <script src="//unpkg.com/element-plus"></script>
+    <style>
+        .component-select {
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .el-select-dropdown__item {
+            color: #000 !important;
+        }
+        
+        .bundle-price {
+            color: #67C23A !important;
+        }
+        
+        .el-select-dropdown__item.selected {
+            color: #000 !important;
+        }
+        
+        .el-select-dropdown__item.selected.bundle-price {
+            color: #67C23A !important;
+        }
+
+        .el-select-dropdown__item.is-disabled {
+            color: #494949 !important;
+            background-color: #b6b6b6 !important;
+        }
+
+        /* 新增的樣式 */
+        .component-row {
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        
+        .component-title {
+            font-weight: bold;
+            text-align: right;
+            padding-right: 20px;
+        }
+
+        /* Loading 動畫樣式 */
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100px;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="loading">
+            <div v-if="error" class="alert alert-danger" role="alert">
+                無法載入資料，請稍後再試
+                <br>
+                <small class="text-muted">{{ error }}</small>
+            </div>
+            <div v-if="loading" class="loading-container">
+                <div class="loading-spinner"></div>
+            </div>
+            <div v-if="componentsData">
+                <el-row v-for="component in componentsData" 
+                       :key="component.title" 
+                       class="component-row">
+                    <el-col :span="6" class="component-title">
+                        <span>{{ component.title }}</span>
+                    </el-col>
+                    <el-col :span="18">
+                        <el-select
+                            v-model="selectedComponents[component.title]"
+                            :placeholder="'請選擇' + component.title"
+                            filterable
+                            class="component-select"
+                            clearable>
+                            <el-option
+                                v-for="item in component.data"
+                                :key="item.id"
+                                :label="`${item.name}${item.price ? ` - $${item.price}` : ''}`"
+                                :value="item"
+                                :disabled="item.price === null"
+                                :class="{ 'bundle-price': item.name.includes('搭購價') }">
+                            </el-option>
+                        </el-select>
+                    </el-col>
+                </el-row>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted } = Vue;
+
+        const app = createApp({
+            setup() {
+                const API_URL = "https://pcbuybuy.aliceric27.workers.dev/coolpc";
+                const componentsData = ref(null);
+                const error = ref(null);
+                const loading = ref(true);
+                const selectedComponents = ref({});
+
+                const processComponentData = (html, selector, componentType) => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const select = doc.querySelector(selector);
+                    const data = [];
+                    if (!select) {
+                        console.error(`找不到 ${componentType} 的選擇器`);
+                        return null;
+                    }
+
+                    select.querySelectorAll('option').forEach(option => {
+                        const value = option.value;
+                        if (value === '0' || !value) return;
+
+                        const text = option.textContent;
+                        const priceMatch = text.match(/\$([0-9,]+)/);
+                        const price = priceMatch ? parseInt(priceMatch[1].replace(',', '')) : null;
+
+                        data.push({
+                            id: value,
+                            name: text.split(',')[0].trim(),
+                            price: price
+                        });
+                    });
+                    return { [componentType]: data };
+                };
+
+                const fetchData = async () => {
+                    try {
+                        loading.value = true;
+                        error.value = null;
+                        
+                        const response = await fetch(API_URL);
+                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                        const html = await response.text();
+                        
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        
+                        const categories = doc.querySelectorAll('.t');
+                        const allData = [];
+                        
+                        for (let i = 0; i < categories.length; i++) {
+                            const componentType = categories[i].textContent.trim();
+                            const selector = `#tbdy > tr:nth-child(${i+1}) > td:nth-child(3) > select`;
+                            const componentData = processComponentData(html, selector, componentType);
+                            if(componentData!==null){
+                            allData.push({
+                                title: componentType,
+                                data: componentData[componentType]
+                                });
+                            }
+                        }
+
+                        componentsData.value = allData;
+                    } catch (err) {
+                        error.value = err.message;
+                        console.error('Error fetching data:', err);
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+
+                onMounted(() => {
+                    fetchData();
+                });
+
+                return {
+                    componentsData,
+                    error,
+                    loading,
+                    selectedComponents
+                };
+            }
+        });
+
+        // 使用 Element Plus
+        app.use(ElementPlus);
+        app.mount('#app');
+    </script>
+</body>
+</html>
