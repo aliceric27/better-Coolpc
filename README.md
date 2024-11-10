@@ -1,4 +1,6 @@
-## 資料來源 (Coolpc)[https://www.coolpc.com.tw/evaluate.php]
+## 資料來源 
+
+[Coolpc](https://www.coolpc.com.tw/evaluate.php)
 
 ## 原理
 
