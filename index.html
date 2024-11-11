@@ -450,7 +450,7 @@
                         const categories = doc.querySelectorAll('.t');
                         console.log(doc.querySelector('#Mdy').innerText);
                         const updateTimeText = doc.querySelector('#Mdy').innerText;
-                        const dateTimeMatch = updateTimeText.match(/\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}/);
+                        const dateTimeMatch = updateTimeText.match(/\d{4}\/\d{2}\/\d{2} \d{1,2}:\d{2}/);
                         updateTime.value = dateTimeMatch ? `${dateTimeMatch[0]}` : '更新時間格式錯誤';
                         const allData = [];
                         
