@@ -2,7 +2,6 @@ const { createApp, ref, onMounted} = Vue;
 
 const app = createApp({
     setup() {
-        const API_URL = "https://pcbuybuy.aliceric27.workers.dev/coolpc";
         const updataAPI = "https://pcbuybuy-api.aliceric27.workers.dev";
         const componentsData = ref(null);
         const error = ref(null);
@@ -81,19 +80,14 @@ const app = createApp({
                 error.value = null;
                 const apiTime = await checkTime();
                 const localTime = localStorage.getItem('updateTime');
-                
                 if (!apiTime || apiTime !== localTime) {
                     // API時間與本地時間不符,需要更新資料
-                    const response = await fetch(API_URL);
+                    const response = await fetch(`${updataAPI}/main`);
                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                     const html = await response.text();
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
-
-                    const updateTimeText = doc.querySelector('#Mdy').innerText;
-                    const dateTimeMatch = updateTimeText.match(/\d{4}\/\d{2}\/\d{2} \d{1,2}:\d{2}/);
-                    
-                    updateTime.value = dateTimeMatch ? `${dateTimeMatch[0]}` : '更新時間格式錯誤';
+                    updateTime.value = apiTime ? apiTime : '更新時間格式錯誤';
                     localStorage.clear();
                     localStorage.setItem('updateTime', updateTime.value);
                     await updateData(updateTime.value, doc, html);
@@ -127,13 +121,6 @@ const app = createApp({
         }
 
         const updateData  = async(updatetime, doc, html)=>{
-            const response = await fetch(`${updataAPI}/updatetime`, {
-                method: 'POST', 
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: updatetime
-            });
             try{
                 const categories = doc.querySelectorAll('.t');
                 const allData = [];    
