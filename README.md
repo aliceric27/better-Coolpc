@@ -11,10 +11,6 @@ GET：
 - /updatetime 取得網頁更新時間
 - /getDatafromKV 從 KV 快取拿資料 (JSON)
 
-POST：
-- /updatetime 更新時間
-- /setDataToKV 將資料上傳到 KV 快取
-
 ## 使用技術
 
 - 使用 Cloudflare Workers 取得資料
