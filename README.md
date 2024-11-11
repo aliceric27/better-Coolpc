@@ -7,9 +7,9 @@
 ApiURL = https://pcbuybuy-api.aliceric27.workers.dev
 
 GET：
-- /main 從原站點拿資料
+- /main 從原站點拿資料 (text/html)
 - /updatetime 取得網頁更新時間
-- /getDatafromKV 從 KV 快取拿資料
+- /getDatafromKV 從 KV 快取拿資料 (JSON)
 
 POST：
 - /updatetime 更新時間
