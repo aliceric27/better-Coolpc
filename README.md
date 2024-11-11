@@ -4,7 +4,7 @@
 
 ## 開放 API
 
-ApiURL = https://pcbuybuy-api.aliceric27.workers.dev
+API `https://pcbuybuy-api.aliceric27.workers.dev`
 
 GET：
 - /main 從原站點拿資料 (text/html)
@@ -14,7 +14,7 @@ GET：
 ## 使用技術
 
 - 使用 Cloudflare Workers 取得資料
-- 前端 Dom Parser 手工解析整理資料
+- 後端 Workers Parser 解析整理資料
 - 使用 Vue 3 渲染畫面
 - 使用 Element Plus 美化畫面
 
