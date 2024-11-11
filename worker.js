@@ -2,42 +2,7 @@ export default {
   async scheduled(event, env, ctx) {
     console.log(event.scheduledTime)
     const url = "https://www.coolpc.com.tw/evaluate.php"
-  //   await getUpdateTime(url, env);
     await updateDataToKV(url, env);
-  //   async function getUpdateTime(url, env){
-  //     const response = await fetch(url)
-    
-  //     if (!response.ok) {
-  //       console.log("Failed to fetch data");
-  //       return;
-  //     }
-    
-  //     let updateTime = null; // 用於存儲提取的更新時間
-    
-  //     // 使用 HTMLRewriter 處理頁面中的 #Mdy 元素，並提取 innerText
-  //     await new HTMLRewriter()
-  //       .on("#Mdy", {
-  //         text(text) {
-  //           const updateTimeText = text.text.trim();
-  //           const dateTimeMatch = updateTimeText.match(/\d{4}\/\d{2}\/\d{2} \d{1,2}:\d{2}/);
-  //           if (dateTimeMatch) {
-  //             updateTime = dateTimeMatch[0];
-  //           }
-  //         }
-  //       })
-  //       .transform(response).text(); // 確保 HTMLRewriter 完成處理
-    
-  //     // 檢查 updateTime 是否符合格式
-  //     if (updateTime) {
-  //       // 如果符合格式的更新時間存在，將其存入 KV
-  //       console.log('Success')
-  //       await env.pcbuydata.put("lastUpdateTime", updateTime);
-  //       console.log("Update time stored successfully:", updateTime);
-  //     } else {
-  //       // 格式錯誤時，僅記錄錯誤日誌，不更新 KV
-  //       console.log("Update time format error");
-  //     }
-  //   }
     async function updateDataToKV(url, env) {
       // 获取原始HTML
       const response = await fetch(url);
