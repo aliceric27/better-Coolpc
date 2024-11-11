@@ -4,7 +4,7 @@
 
 ## 開放 API
 
-ApiURL = "https://pcbuybuy-api.aliceric27.workers.dev"
+ApiURL = https://pcbuybuy-api.aliceric27.workers.dev
 
 GET：
 - /main 從原站點拿資料
