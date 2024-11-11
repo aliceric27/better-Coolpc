@@ -98,11 +98,16 @@ const app = createApp({
                     localStorage.setItem('updateTime', updateTime.value);
                     await updateData(updateTime.value, doc, html);
                 } else {
-                    // API時間與本地時間相符,從KV取得資料
+                    // API時間與本地時間相符,優先使用local資料
                     updateTime.value = localTime;
-                    const data = await getDatafromKV();
-                    localStorage.setItem('componentsData', JSON.stringify(data));
-                    componentsData.value = data;
+                    const localData = localStorage.getItem('componentsData');
+                    if (localData) {
+                        componentsData.value = JSON.parse(localData);
+                    } else {
+                        const data = await getDatafromKV();
+                        localStorage.setItem('componentsData', JSON.stringify(data));
+                        componentsData.value = data;
+                    }
                 }
             } catch (err) {
                 error.value = err.message;
