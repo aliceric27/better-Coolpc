@@ -9,45 +9,108 @@ const app = createApp({
         const selectedComponents = ref({});
         const updateTime = ref(null);
 
+        const processComponentData = (html, selector, componentType) => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            const select = doc.querySelector(selector);
+            const data = [];
+            let currentColorGroup = 0;
+
+            if (!select) {
+                console.error(`找不到 ${componentType} 的選擇器`);
+                return null;
+            }
+
+            // 處理所有子元素
+            select.childNodes.forEach(node => {
+                if (node.nodeName === 'OPTGROUP') {
+                    // 更新顏色組
+                    currentColorGroup = (currentColorGroup % 4) + 1;
+                    
+                    // 添加組標題
+                    data.push({
+                        id: `group_${node.label}`,
+                        name: node.label,
+                        price: null,
+                        isGroup: true,
+                        colorGroup: currentColorGroup
+                    });
+                    
+                    // 處理組內的選項
+                    node.querySelectorAll('option').forEach(option => {
+                        const value = option.value;
+                        if (value === '0' || !value) return;
+
+                        const text = option.textContent;
+                        const priceMatch = text.match(/\$([0-9,]+)/);
+                        const price = priceMatch ? parseInt(priceMatch[1].replace(',', '')) : null;
+
+                        data.push({
+                            id: value,
+                            name: text.split(',')[0].trim(),
+                            price: price,
+                            isGroup: false,
+                            colorGroup: currentColorGroup
+                        });
+                    });
+                } else if (node.nodeName === 'OPTION') {
+                    const value = node.value;
+                    if (value === '0' || !value) return;
+
+                    const text = node.textContent;
+                    const priceMatch = text.match(/\$([0-9,]+)/);
+                    const price = priceMatch ? parseInt(priceMatch[1].replace(',', '')) : null;
+
+                    data.push({
+                        id: value,
+                        name: text.split(',')[0].trim(),
+                        price: price,
+                        isGroup: false,
+                        colorGroup: 0  // 非組內選項不設置顏色
+                    });
+                }
+            });
+            return { [componentType]: data };
+        };
+
         const fetchData = async () => {
             try {
                 loading.value = true;
                 error.value = null;
-
-                // 檢查 API 更新時間
                 const apiTime = await checkTime();
                 const localTime = localStorage.getItem('updateTime');
-
-                // 更新本地資料
-                const updateLocalData = async () => {
-                    const data = await getDatafromKV();
-                    localStorage.setItem('componentsData', JSON.stringify(data));
-                    localStorage.setItem('updateTime', apiTime);
-                    componentsData.value = data;
-                    updateTime.value = apiTime;
-                };
-
-                // 如果 API 時間不存在或與本地時間不同,則更新資料
+                
                 if (!apiTime || apiTime !== localTime) {
-                    if (!apiTime) {
-                        updateTime.value = '更新時間格式錯誤';
-                        return;
-                    }
+                    // API時間與本地時間不符,需要更新資料
+                    const response = await fetch(`${updataAPI}/main`);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const html = await response.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    const updateTimeText = doc.querySelector('#Mdy').innerText;
+                    const dateTimeMatch = updateTimeText.match(/\d{4}\/\d{2}\/\d{2} \d{1,2}:\d{2}/);
+                    
+                    updateTime.value = dateTimeMatch ? `${dateTimeMatch[0]}` : '更新時間格式錯誤';
                     localStorage.clear();
-                    await updateLocalData();
+                    localStorage.setItem('updateTime', updateTime.value);
+                    await updateData(updateTime.value, doc, html);
                 } else {
-                    // 使用本地快取資料
+                    // API時間與本地時間相符,優先使用local資料
                     updateTime.value = localTime;
                     const localData = localStorage.getItem('componentsData');
                     if (localData) {
                         componentsData.value = JSON.parse(localData);
                     } else {
-                        await updateLocalData();
+                        const data = await getDatafromKV();
+                        localStorage.setItem('componentsData', JSON.stringify(data));
+                        componentsData.value = data;
                     }
                 }
             } catch (err) {
                 error.value = err.message;
-                console.error('獲取資料錯誤:', err);
+                console.error('Error fetching data:', err);
             } finally {
                 loading.value = false;
             }
@@ -60,6 +123,41 @@ const app = createApp({
             }
             const data = await response.text();
             return data;
+        }
+
+        const updateData  = async(updatetime, doc, html)=>{
+            const response = await fetch(`${updataAPI}/updatetime`, {
+                method: 'POST', 
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: updatetime
+            });
+            try{
+                const categories = doc.querySelectorAll('.t');
+                const allData = [];    
+                for (let i = 0; i < categories.length; i++) {
+                    const componentType = categories[i].textContent.trim();
+                    const selector = `#tbdy > tr:nth-child(${i+1}) > td:nth-child(3) > select`;
+                    const componentData = processComponentData(html, selector, componentType);
+                    if(componentData!==null){
+                    allData.push({
+                        title: componentType,
+                        data: componentData[componentType]
+                        });
+                    }
+                }
+                const jsonData = JSON.stringify(allData);
+
+                await fetch(`${updataAPI}/setDataToKV`, {method: 'POST', body: jsonData});
+                
+                componentsData.value = allData;
+            } catch (err) {
+                error.value = err.message;
+                console.error('Error fetching data:', err);
+            } finally {
+                loading.value = false;
+            }
         }
 
         const getDatafromKV = async()=>{

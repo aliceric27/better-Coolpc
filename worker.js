@@ -2,97 +2,44 @@ export default {
   async scheduled(event, env, ctx) {
     console.log(event.scheduledTime)
     const url = "https://www.coolpc.com.tw/evaluate.php"
-    await updateDataToKV(url, env);
-    async function updateDataToKV(url, env) {
-      // 获取原始HTML
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    
-      const allData = [];
-      let currentCategory = null;
-    
-      // 创建HTML重写器
-      const rewriter = new HTMLRewriter()
-        // 处理类别标题
-        .on('.t', {
-          element(element) {
-            currentCategory = {
-              title: element.textContent.trim(),
-              data: []
-            };
-            allData.push(currentCategory);
-          }
-        })
-        // 处理select元素
-        .on('select', {
-          element(element) {
-            if (!currentCategory) return;
-            
-            let currentColorGroup = 0;
-            const data = [];
-    
-            // 处理optgroup和option
-            element.onEndTag(() => {
-              if (data.length > 0) {
-                currentCategory.data = data;
-              }
-            });
-          }
-        })
-        // 处理optgroup
-        .on('optgroup', {
-          element(element) {
-            if (!currentCategory) return;
-            
-            const label = element.getAttribute('label');
-            currentColorGroup = (currentColorGroup % 4) + 1;
-            
-            currentCategory.data.push({
-              id: `group_${label}`,
-              name: label,
-              price: null,
-              isGroup: true,
-              colorGroup: currentColorGroup
-            });
-          }
-        })
-        // 处理option
-        .on('option', {
-          element(element) {
-            if (!currentCategory) return;
-    
-            const value = element.getAttribute('value');
-            if (value === '0' || !value) return;
-    
-            const text = element.textContent;
-            const priceMatch = text.match(/\$([0-9,]+)/);
-            const price = priceMatch ? parseInt(priceMatch[1].replace(',', '')) : null;
-    
-            currentCategory.data.push({
-              id: value,
-              name: text.split(',')[0].trim(),
-              price: price,
-              isGroup: false,
-              colorGroup: currentColorGroup || 0
-            });
-          }
-        });
-    try{
- // 转换响应
- const transformedResponse = rewriter.transform(response);
- await transformedResponse.text(); // 需要等待转换完成
+  //   await getUpdateTime(url, env);
 
- // 将数据存储到KV
- await env.pcbuydata.put('pcbuydata', JSON.stringify(allData));
- 
- // 更新时间戳
- const timestamp = new Date().toISOString();
- await env.pcbuydata.put('lastUpdateTime', timestamp);
- console.log('Update time stored successfully:', timestamp);
-    }catch(error){
-      console.log(error)
+    await getUpdateTime(url, env);
+    async function getUpdateTime(url, env){
+      const response = await fetch(url)
+    
+      if (!response.ok) {
+        console.log("Failed to fetch data");
+        return;
+      }
+    
+      let updateTime = null; // 用於存儲提取的更新時間
+    
+      // 使用 HTMLRewriter 處理頁面中的 #Mdy 元素，並提取 innerText
+      await new HTMLRewriter()
+        .on("#Mdy", {
+          text(text) {
+            const updateTimeText = text.text.trim();
+            const dateTimeMatch = updateTimeText.match(/\d{4}\/\d{2}\/\d{2} \d{1,2}:\d{2}/);
+            if (dateTimeMatch) {
+              updateTime = dateTimeMatch[0];
+            }
+          }
+        })
+        .transform(response).text(); // 確保 HTMLRewriter 完成處理
+    
+      // 檢查 updateTime 是否符合格式
+      if (updateTime) {
+        // 如果符合格式的更新時間存在，將其存入 KV
+        console.log('Success')
+        await env.pcbuydata.put("lastUpdateTime", updateTime);
+        console.log("Update time stored successfully:", updateTime);
+      } else {
+        // 格式錯誤時，僅記錄錯誤日誌，不更新 KV
+        console.log("Update time format error");
+      }
     }
-    }
+
 
 
   },
