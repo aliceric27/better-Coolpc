@@ -80,7 +80,22 @@ const app = createApp({
                 error.value = null;
                 const apiTime = await checkTime();
                 const localTime = localStorage.getItem('updateTime');
+                const localData = localStorage.getItem('componentsData');
                 
+                // 如果本地沒有資料，優先從 KV 獲取
+                if (!localData) {
+                    const kvData = await getDatafromKV();
+                    if (kvData) {
+                        componentsData.value = kvData;
+                        localStorage.setItem('componentsData', JSON.stringify(kvData));
+                        updateTime.value = formatTimestamp(apiTime);
+                        localStorage.setItem('updateTime', apiTime);
+                        loading.value = false;
+                        return;
+                    }
+                }
+
+                // 檢查更新時間
                 if (!apiTime || apiTime !== localTime) {
                     // API時間與本地時間不符,需要更新資料
                     const response = await fetch(`${updataAPI}/main`);
@@ -98,6 +113,7 @@ const app = createApp({
                     const jsonData = await updateData(doc, html);
                     loading.value = false;
                     localStorage.setItem('componentsData', jsonData);
+                    
                     // 儲存到KV時加入時間戳
                     await fetch(`${updataAPI}/setDataToKV`, {
                         method: 'POST', 
@@ -107,20 +123,9 @@ const app = createApp({
                         })
                     });
                 } else {
-                    // API時間與本地時間相符,優先使用local資料
-                    updateTime.value = `${formatTimestamp(localTime)}`
-                    const localData = localStorage.getItem('componentsData');
-                    if (localData) {
-                        componentsData.value = JSON.parse(localData);
-                    } else {
-                        // 從KV獲取特定時間戳的資料
-                        const data = await getDatafromKV();
-                        console.log('data',data)
-                        if (data) {
-                            localStorage.setItem('componentsData', JSON.stringify(data));
-                            componentsData.value = data
-                        }
-                    }
+                    // API時間與本地時間相符,使用local資料
+                    updateTime.value = `${formatTimestamp(localTime)}`;
+                    componentsData.value = JSON.parse(localData);
                 }
             } catch (err) {
                 error.value = err.message;
