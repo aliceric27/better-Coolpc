@@ -88,24 +88,38 @@ const app = createApp({
                     const html = await response.text();
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
-
                     const updateTimeText = doc.querySelector('#Mdy').innerText;
                     const dateTimeMatch = updateTimeText.match(/\d{4}\/\d{2}\/\d{2} \d{1,2}:\d{2}/);
                     
-                    updateTime.value = dateTimeMatch ? `${dateTimeMatch[0]}` : '更新時間格式錯誤';
+                    const TimeStamp = dateTimeMatch ? new Date(`${dateTimeMatch[0]}` + ' GMT+0800').getTime() : '更新時間格式錯誤';
+                    updateTime.value = `${dateTimeMatch[0]}`;
                     localStorage.clear();
-                    localStorage.setItem('updateTime', updateTime.value);
-                    await updateData(updateTime.value, doc, html);
+                    localStorage.setItem('updateTime', TimeStamp);
+                    const jsonData = await updateData(doc, html);
+                    loading.value = false;
+                    localStorage.setItem('componentsData', jsonData);
+                    // 儲存到KV時加入時間戳
+                    await fetch(`${updataAPI}/setDataToKV`, {
+                        method: 'POST', 
+                        body: JSON.stringify({
+                            time: TimeStamp,
+                            data: JSON.parse(jsonData)
+                        })
+                    });
                 } else {
                     // API時間與本地時間相符,優先使用local資料
-                    updateTime.value = localTime;
+                    updateTime.value = `${formatTimestamp(localTime)}`
                     const localData = localStorage.getItem('componentsData');
                     if (localData) {
                         componentsData.value = JSON.parse(localData);
                     } else {
+                        // 從KV獲取特定時間戳的資料
                         const data = await getDatafromKV();
-                        localStorage.setItem('componentsData', JSON.stringify(data));
-                        componentsData.value = data;
+                        console.log('data',data)
+                        if (data) {
+                            localStorage.setItem('componentsData', JSON.stringify(data));
+                            componentsData.value = data
+                        }
                     }
                 }
             } catch (err) {
@@ -125,14 +139,7 @@ const app = createApp({
             return data;
         }
 
-        const updateData  = async(updatetime, doc, html)=>{
-            const response = await fetch(`${updataAPI}/updatetime`, {
-                method: 'POST', 
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: updatetime
-            });
+        const updateData  = async(doc, html)=>{
             try{
                 const categories = doc.querySelectorAll('.t');
                 const allData = [];    
@@ -148,10 +155,8 @@ const app = createApp({
                     }
                 }
                 const jsonData = JSON.stringify(allData);
-
-                await fetch(`${updataAPI}/setDataToKV`, {method: 'POST', body: jsonData});
-                
                 componentsData.value = allData;
+                return  jsonData
             } catch (err) {
                 error.value = err.message;
                 console.error('Error fetching data:', err);
@@ -165,6 +170,19 @@ const app = createApp({
             if(!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
             return data;
+        }
+
+        const formatTimestamp = (timestamp) => {
+            const num = parseInt(timestamp);
+            let date = new Date(num);
+            let year = date.getFullYear();
+            let month = (date.getMonth() + 1).toString().padStart(2, '0');  // 月份從 0 開始，需加 1
+            let day = date.getDate().toString().padStart(2, '0');
+            let hours = date.getHours().toString().padStart(2, '0');
+            let minutes = date.getMinutes().toString().padStart(2, '0');
+        
+            // 返回格式化的日期時間
+            return `${year}/${month}/${day} ${hours}:${minutes}`;
         }
 
         onMounted(() => {

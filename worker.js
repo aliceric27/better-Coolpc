@@ -32,8 +32,8 @@ export default {
       if (updateTime) {
         // 如果符合格式的更新時間存在，將其存入 KV
         console.log('Success')
-        await env.pcbuydata.put("lastUpdateTime", updateTime);
-        console.log("Update time stored successfully:", updateTime);
+        await env.pcbuydata.put("lastUpdateTime", getTime(updateTime));
+        console.log("Update time stored successfully:", getTime(updateTime));
       } else {
         // 格式錯誤時，僅記錄錯誤日誌，不更新 KV
         console.log("Update time format error");
@@ -41,6 +41,9 @@ export default {
     }
 
 
+    function getTime(time){
+      return new Date(time).getTime();
+    }
 
   },
   async fetch(request, env, ctx, ) {
@@ -131,16 +134,6 @@ export default {
             }
           });
         } catch (error) {
-          // 如果發生錯誤但有緩存，返回緩存
-          if (cachedContent) {
-            return new Response(cachedContent, {
-              headers: {
-                ...corsHeaders,
-                'Content-Type': 'text/html; charset=utf-8',
-                'X-Cache': 'STALE'
-              }
-            });
-          }
           return new Response(JSON.stringify({ error: error.message }), {
             status: 500,
             headers: corsHeaders
@@ -166,7 +159,8 @@ export default {
       if(url.pathname === '/getDatafromKV'){
         // 取得 pcbuyupdatetime 資料
          try {
-           const data = await env.pcbuydata.get("pcbuydata");
+          const currentTime = await env.pcbuydata.get("lastUpdateTime");
+           const data = await env.pcbuydata.get(`pcbuydata-${currentTime}`);
            if (data) {
              return new Response(data, { status: 200 , headers: JSONcorsHeaders });
            } else {
@@ -197,15 +191,16 @@ export default {
 
       if(url.pathname === '/setDataToKV'){
         try {
-          const data = await request.json();
-          const jsonString = JSON.stringify(data);
-          if (jsonString) {
-            await env.pcbuydata.put("pcbuydata", jsonString);
+          const currentTime = await env.pcbuydata.get("lastUpdateTime");
+          const data = await request.json(); // data 已經是解析後的物件
+          if (data && data.time && data.data) {
+            await env.pcbuydata.delete(`pcbuydata-${currentTime}`);
+            // 將 data.data 轉換為字串後再存入
+            await env.pcbuydata.put(`pcbuydata-${data.time}`, JSON.stringify(data.data));
             return new Response('完整資料已成功儲存到 KV 中', { status: 200, headers: corsHeaders });
           } else {
             return new Response("請求資料格式錯誤", { status: 400, headers: corsHeaders });
           }
-    
         } catch (err) {
           return new Response(`資料儲存失敗：${err}`, { status: 500, headers: corsHeaders });
         }
@@ -216,5 +211,6 @@ export default {
       // 若路徑或方法不符合，回傳 405 Method Not Allowed
       return new Response("方法不允許", { status: 405, headers: corsHeaders });
     }
-  },
+  }
+
 };
