@@ -195,6 +195,7 @@ export default {
           const data = await request.json(); // data 已經是解析後的物件
           if (data && data.time && data.data) {
             await env.pcbuydata.delete(`pcbuydata-${currentTime}`);
+            await env.pcbuydata.put('lastUpdateTime', data.time);
             // 將 data.data 轉換為字串後再存入
             await env.pcbuydata.put(`pcbuydata-${data.time}`, JSON.stringify(data.data));
             return new Response('完整資料已成功儲存到 KV 中', { status: 200, headers: corsHeaders });
