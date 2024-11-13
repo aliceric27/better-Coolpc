@@ -66,81 +66,6 @@ export default {
     if(request.method === 'OPTIONS') {
       return new Response('', { headers:corsHeaders })
     }
-    if (request.method === 'GET') {
-
-      if (url.pathname === '/main') {
-        try {
-          // 檢查緩存是否存在
-          const cachedContent = await env.pcbuydata.get("mainPageCache");
-          const cacheTime = await env.pcbuydata.get("mainPageCacheTime");
-          const now = Date.now();
-          
-          // 如果緩存存在且未過期（30分鐘），直接返回
-          if (cachedContent && cacheTime && (now - parseInt(cacheTime)) < 1800000) {
-            return new Response(cachedContent, {
-              headers: {
-                ...corsHeaders,
-                'Content-Type': 'text/html; charset=utf-8',
-                'X-Cache': 'HIT'
-              }
-            });
-          }
-    
-          // 如果沒有緩存或已過期，從原始網站獲取
-          const response = await fetch('https://www.coolpc.com.tw/evaluate.php', {
-            cf: {
-              // 啟用 Cloudflare 的自動編碼轉換
-              cacheTtl: 300,
-              cacheEverything: true,
-            },
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-              'Accept-Language': 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7',
-            }
-          });
-    
-          // 使用 stream 來處理回應
-          const reader = response.body.getReader();
-          const chunks = [];
-          
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            chunks.push(value);
-          }
-          
-          // 合併 chunks 並解碼
-          const concatenated = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
-          let offset = 0;
-          for (const chunk of chunks) {
-            concatenated.set(chunk, offset);
-            offset += chunk.length;
-          }
-          
-          const text = new TextDecoder('big5').decode(concatenated);
-          
-          // 儲存到 KV
-          ctx.waitUntil(Promise.all([
-            env.pcbuydata.put("mainPageCache", text),
-            env.pcbuydata.put("mainPageCacheTime", now.toString())
-          ]));
-    
-          return new Response(text, {
-            headers: {
-              ...corsHeaders,
-              'Content-Type': 'text/html; charset=utf-8',
-              'X-Cache': 'MISS'
-            }
-          });
-        } catch (error) {
-          return new Response(JSON.stringify({ error: error.message }), {
-            status: 500,
-            headers: corsHeaders
-          });
-        }
-      }
-      }
 
       if(url.pathname === '/updatetime'){
        // 取得 pcbuyupdatetime 資料
@@ -163,8 +88,8 @@ export default {
            const data = await env.pcbuydata.get(`pcbuydata-${currentTime}`);
            if (data) {
              return new Response(data, { status: 200 , headers: JSONcorsHeaders });
-           } else {
-             return new Response("尚未有更新記錄。", { status: 404, headers: corsHeaders });
+           } else{
+            return new Response("請求資料格式錯誤", { status: 400, headers: corsHeaders });
            }
          } catch (err) {
            return new Response(`取得資料失敗：${err}`, { status: 500, headers: corsHeaders });
@@ -191,10 +116,12 @@ export default {
 
       if(url.pathname === '/setDataToKV'){
         try {
-          const currentTime = await env.pcbuydata.get("lastUpdateTime");
           const data = await request.json(); // data 已經是解析後的物件
           if (data && data.time && data.data) {
-            await env.pcbuydata.delete(`pcbuydata-${currentTime}`);
+            const list = await env.pcbuydata.list({prefix: 'pcbuydata-'});
+            for(const key of list.keys){
+                await env.pcbuydata.delete(key.name);
+            }
             await env.pcbuydata.put('lastUpdateTime', data.time);
             // 將 data.data 轉換為字串後再存入
             await env.pcbuydata.put(`pcbuydata-${data.time}`, JSON.stringify(data.data));

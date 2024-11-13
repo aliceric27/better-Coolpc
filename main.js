@@ -92,6 +92,8 @@ const app = createApp({
                         localStorage.setItem('updateTime', apiTime);
                         loading.value = false;
                         return;
+                    }else{
+                        error.value = '請求資料格式錯誤';
                     }
                 }
 
