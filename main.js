@@ -8,6 +8,7 @@ const app = createApp({
         const loading = ref(true);
         const selectedComponents = ref({});
         const updateTime = ref(null);
+        const loadingStatus = ref('載入中...');
 
         const processComponentData = (html, selector, componentType) => {
             const parser = new DOMParser();
@@ -76,6 +77,7 @@ const app = createApp({
 
         const fetchData = async () => {
             try {
+                loadingStatus.value = '比對日期中...';
                 loading.value = true;
                 error.value = null;
                 const apiTime = await checkTime();
@@ -85,6 +87,7 @@ const app = createApp({
                 // 如果本地沒有資料，優先從 KV 獲取
                 if (!localData) {
                     const kvData = await getDatafromKV();
+                    loadingStatus.value = '從KV獲取資料中...';
                     if (kvData) {
                         componentsData.value = kvData;
                         localStorage.setItem('componentsData', JSON.stringify(kvData));
@@ -100,6 +103,7 @@ const app = createApp({
                 // 檢查更新時間
                 if (!apiTime || apiTime !== localTime) {
                     // API時間與本地時間不符,需要更新資料
+                    loadingStatus.value = '時間異動，重新整理資料中...';
                     const response = await fetch(`${updataAPI}/main`);
                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                     const html = await response.text();
@@ -242,6 +246,7 @@ const app = createApp({
             loading,
             selectedComponents,
             updateTime,
+            loadingStatus,
             getComponentSelections,
             addSelection,
             removeSelection,

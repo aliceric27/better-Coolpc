@@ -27,6 +27,7 @@
             </div>
             <div v-if="loading" class="loading-container">
                 <div class="loading-spinner"></div>
+                <div>{{loadingStatus}}</div>
             </div>
             <div v-if="componentsData">
                 <div v-if="updateTime" class="update-time">更新時間: {{ updateTime }}</div>
