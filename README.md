@@ -2,6 +2,15 @@
 
 [Coolpc](https://www.coolpc.com.tw/evaluate.php)
 
+## 開放 API
+
+API `https://pcbuybuy-api.aliceric27.workers.dev`
+
+GET：
+- /main 從原站點拿資料 (text/html)
+- /updatetime 取得網頁更新時間
+- /getDatafromKV 從 KV 快取拿資料 (JSON)
+
 ## 使用技術
 
 - 使用 Cloudflare Workers 取得資料

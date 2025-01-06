@@ -1,0 +1,254 @@
+.component-select {
+    max-width: 60vw;
+}
+
+.el-select-dropdown__item {
+    color: #000 !important;
+}
+
+.bundle-price {
+    color: #67C23A !important;
+}
+
+.el-select-dropdown__item.selected {
+    color: #000 !important;
+}
+
+.el-select-dropdown__item.selected.bundle-price {
+    color: #67C23A !important;
+}
+
+.el-select-dropdown__item.is-disabled {
+    color: #494949 !important;
+    background-color: #b6b6b6 !important;
+    font-size: 12px !important;
+}
+
+/* 新增的樣式 */
+.component-row {
+    margin-bottom: 15px;
+    align-items: center;
+}
+
+.component-title {
+    font-weight: bold;
+    text-align: right;
+    padding-right: 20px;
+}
+
+/* Loading 動畫樣式 */
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction:column;
+    height: 100px;
+}
+
+.loading-spinner {
+    margin: 10px 0;
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.option-group {
+    font-weight: bold;
+    background-color: #003c1e !important;
+    color: #676767 !important;
+}
+
+/* 增加選擇器的特異性來提高優先級 */
+.el-select-dropdown__item.option-group {
+    font-weight: bold !important;
+    background-color: #f5f7fa !important;
+    color: #606266 !important;
+}
+
+/* 確保 is-disabled 不會覆蓋 option-group 的樣式 */
+.el-select-dropdown__item.is-disabled:not(.option-group) {
+    color: #540000 !important;
+    background-color: #c9c9c9 !important;
+}
+
+/* 定義四種顏色組合 */
+.color-group-1 {
+    background-color: rgba(64, 158, 255, 0.1) !important;
+}
+.color-group-1.option-group {
+    background-color: rgba(64, 158, 255, 0.2) !important;
+}
+
+.color-group-2 {
+    background-color: rgba(103, 194, 58, 0.1) !important;
+}
+.color-group-2.option-group {
+    background-color: rgba(103, 194, 58, 0.2) !important;
+}
+
+.color-group-3 {
+    background-color: rgba(230, 162, 60, 0.1) !important;
+}
+.color-group-3.option-group {
+    background-color: rgba(230, 162, 60, 0.2) !important;
+}
+
+.color-group-4 {
+    background-color: rgba(245, 108, 108, 0.1) !important;
+}
+.color-group-4.option-group {
+    background-color: rgba(245, 108, 108, 0.2) !important;
+}
+
+/* is-disabled 的樣式 */
+.el-select-dropdown__item.is-disabled:not(.option-group) {
+    opacity: 0.7 !important;
+}
+
+/* 在 style 區塊中加 */
+@media screen and (max-width: 480px) {
+    .component-title {
+        font-size: 14px;
+        padding-right: 5px;
+    }
+    
+    .el-select {
+        width: 100%;  /* 確保 select 填滿容器 */
+    }
+
+    /* 處理選項文字溢出 */
+    .el-select-dropdown__item {
+        white-space: normal !important;  /* 允許文字換行 */
+        height: auto !important;
+        padding: 5px 8px !important;
+        line-height: 1.4 !important;
+    }
+    
+    /* 調整下拉選單寬度 */
+    .el-select-dropdown {
+        width: 90vw !important;  /* 使用視窗寬度的 90% */
+        max-width: 360px;
+    }
+}
+
+/* 新增价格显示相关样式 */
+.component-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;  /* 元素之间的间距 */
+}
+
+.price-display {
+    min-width: 100px;
+    padding: 8px 12px;
+    background-color: #f5f7fa;
+    border-radius: 4px;
+    color: #56bb24;
+    font-weight: bold;
+    text-align: left;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 480px) {
+    .component-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .price-display {
+        margin-top: 5px;
+        text-align: center;
+    }
+}
+
+/* 在 style 區塊中添加 */
+.selection-controls {
+    display: flex;
+    gap: 5px;
+    margin-left: 10px;
+}
+
+.component-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: nowrap;
+}
+
+/* 移動端適配 */
+@media screen and (max-width: 480px) {
+    .component-container {
+        flex-direction: row;
+        align-items: center;
+    }
+    
+    .component-select {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .price-display {
+        min-width: 80px;
+    }
+    
+    .selection-controls {
+        margin-left: 5px;
+        margin-top: 0;
+        flex-shrink: 0;
+    }
+}
+
+.total-price-display {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background-color: #f5f7fa;
+    border-radius: 4px;
+    color: #498a28;
+    font-weight: bold;
+    text-align: left;
+    max-width: 50vw;
+}
+
+@media screen and (max-width: 480px) {
+    .total-price-display {
+        text-align: center;
+        margin-bottom: 15px;
+    }
+}
+
+.grand-total-row {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f5f7fa;
+    border-radius: 8px;
+}
+
+.grand-total-display {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #498a28;
+    text-align: center;
+}
+
+@media screen and (max-width: 480px) {
+    .grand-total-display {
+        text-align: center;
+    }
+}
+
+/* 新增更新時間的樣式 */
+.update-time {
+    text-align: center;
+    margin: 10px 0;
+    color: #606266;
+    font-size: 0.9em;
+}
