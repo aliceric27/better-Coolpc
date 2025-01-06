@@ -199,8 +199,10 @@
                         const categories = doc.querySelectorAll('.t');
                         console.log(doc.querySelector('#Mdy').innerText);
                         const updateTimeText = doc.querySelector('#Mdy').innerText;
-                        const dateTimeMatch = updateTimeText.match(/\d{4}\/\d{2}\/\d{2} \d{1,2}:\d{2}/);
-                        updateTime.value = dateTimeMatch ? `${dateTimeMatch[0]}` : '更新時間格式錯誤';
+                        const dateTimeMatch = updateTimeText.match(/(\d{4})\/(\d{1,2})\/(\d{1,2}) (\d{1,2}):(\d{2})/);
+                        updateTime.value = dateTimeMatch ? 
+                            `${dateTimeMatch[1]}/${String(dateTimeMatch[2]).padStart(2, '0')}/${String(dateTimeMatch[3]).padStart(2, '0')} ${dateTimeMatch[4]}:${dateTimeMatch[5]}` : 
+                            '更新時間格式錯誤';
                         const allData = [];
                         
                         for (let i = 0; i < categories.length; i++) {
