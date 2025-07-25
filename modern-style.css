@@ -1,0 +1,925 @@
+/* 現代化設計系統 - Better Coolpc */
+
+/* ===== CSS 變數定義 ===== */
+:root {
+  /* 品牌色彩 */
+  --primary-color: #5e72e4;
+  --primary-dark: #4c63d2;
+  --primary-light: #7b8fff;
+  --secondary-color: #825ee4;
+  --accent-color: #11cdef;
+  --success-color: #2dce89;
+  --warning-color: #fb6340;
+  --danger-color: #f5365c;
+  --info-color: #11cdef;
+  
+  /* 中性色 */
+  --gray-100: #f6f9fc;
+  --gray-200: #e9ecef;
+  --gray-300: #dee2e6;
+  --gray-400: #ced4da;
+  --gray-500: #adb5bd;
+  --gray-600: #8898aa;
+  --gray-700: #525f7f;
+  --gray-800: #32325d;
+  --gray-900: #212529;
+  
+  /* 淺色模式 */
+  --bg-primary: #f8f9fe;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f6f9fc;
+  --text-primary: #32325d;
+  --text-secondary: #525f7f;
+  --text-muted: #8898aa;
+  --border-color: #e9ecef;
+  --shadow-sm: 0 0 0.5rem rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.15);
+  
+  /* 間距系統 */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-xxl: 3rem;
+  
+  /* 圓角 */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+  
+  /* 動畫 */
+  --transition-fast: 150ms ease-in-out;
+  --transition-base: 250ms ease-in-out;
+  --transition-slow: 350ms ease-in-out;
+}
+
+/* 深色模式 */
+[data-theme="dark"] {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #242424;
+  --bg-tertiary: #2e2e2e;
+  --text-primary: #f0f0f0;
+  --text-secondary: #b0b0b0;
+  --text-muted: #808080;
+  --border-color: #404040;
+  --shadow-sm: 0 0 0.5rem rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.7);
+  
+  /* 深色模式特殊顏色調整 */
+  --success-color: #52c41a;
+  --primary-color: #7b8fff;
+  --primary-dark: #5e72e4;
+}
+
+/* ===== 全局樣式重置 ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  transition: background-color var(--transition-base), color var(--transition-base);
+}
+
+/* ===== 導航欄 ===== */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  z-index: 1000;
+  transition: all var(--transition-base);
+}
+
+.navbar-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  text-decoration: none;
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.navbar-logo {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+/* ===== 主容器 ===== */
+.main-container {
+  margin-top: 64px;
+  min-height: calc(100vh - 64px);
+  display: flex;
+}
+
+/* ===== 側邊欄 ===== */
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 64px;
+  bottom: 0;
+  width: 280px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+  transition: transform var(--transition-base);
+}
+
+.sidebar-section {
+  margin-bottom: var(--spacing-xl);
+}
+
+.sidebar-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--spacing-md);
+}
+
+/* ===== 主內容區 ===== */
+.main-content {
+  flex: 1;
+  margin-left: 280px;
+  padding: var(--spacing-xl);
+  max-width: 1200px;
+  width: 100%;
+}
+
+/* ===== 卡片組件 ===== */
+.card {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  transition: all var(--transition-base);
+  border: 1px solid var(--border-color);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ===== 按鈕樣式 ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(94, 114, 228, 0.3);
+}
+
+.btn-icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: var(--radius-full);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-icon:hover {
+  background: var(--bg-primary);
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+/* ===== 選擇器美化 ===== */
+.modern-select {
+  position: relative;
+  width: 100%;
+}
+
+.modern-select .el-select {
+  width: 100%;
+}
+
+.modern-select .el-input__inner {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  height: 44px;
+  border-radius: var(--radius-md);
+  padding: 0 var(--spacing-md);
+  transition: all var(--transition-fast);
+}
+
+.modern-select .el-input__inner:hover {
+  border-color: var(--primary-color);
+}
+
+.modern-select .el-input__inner:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(94, 114, 228, 0.1);
+}
+
+/* ===== 價格顯示 ===== */
+.price-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: linear-gradient(135deg, #2dce89 0%, #20bf6b 100%);
+  color: white;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.total-price {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  text-align: center;
+  margin-top: var(--spacing-md);
+}
+
+.total-price-label {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-bottom: var(--spacing-xs);
+}
+
+.total-price-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--success-color);
+}
+
+/* ===== 載入動畫 ===== */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loading-card {
+  background: var(--bg-secondary);
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto var(--spacing-md);
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ===== 動畫效果 ===== */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity var(--transition-base);
+}
+
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
+.slide-enter-active, .slide-leave-active {
+  transition: transform var(--transition-base);
+}
+
+.slide-enter-from {
+  transform: translateX(-100%);
+}
+
+.slide-leave-to {
+  transform: translateX(100%);
+}
+
+/* ===== 響應式設計 ===== */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .sidebar.active {
+    transform: translateX(0);
+  }
+  
+  .main-content {
+    margin-left: 0;
+    padding: var(--spacing-md);
+  }
+  
+  .navbar-container {
+    padding: 0 var(--spacing-md);
+  }
+  
+  .card {
+    padding: var(--spacing-md);
+  }
+}
+
+/* ===== 組件特定樣式 ===== */
+.component-card {
+  margin-bottom: var(--spacing-lg);
+}
+
+.component-total {
+  color: var(--success-color);
+  font-weight: 600;
+  font-size: 1.125rem;
+}
+
+.selection-row {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.selection-row:last-child {
+  margin-bottom: 0;
+}
+
+.selection-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.btn-sm {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+}
+
+.btn-danger {
+  background: var(--danger-color);
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #ec5066;
+}
+
+/* 選項樣式 */
+.option-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.option-name {
+  flex: 1;
+  margin-right: var(--spacing-md);
+}
+
+.option-price {
+  color: var(--success-color);
+  font-weight: 600;
+}
+
+.el-select-dropdown__item {
+  padding: var(--spacing-sm) var(--spacing-md);
+  color: var(--text-primary);
+}
+
+.el-select-dropdown__item.option-group {
+  font-weight: 600;
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.el-select-dropdown__item.is-disabled:not(.option-group) {
+  opacity: 0.6;
+}
+
+/* 顏色組樣式 */
+.color-group-1 {
+  background-color: rgba(94, 114, 228, 0.08);
+}
+.color-group-1.option-group {
+  background-color: rgba(94, 114, 228, 0.15);
+}
+
+.color-group-2 {
+  background-color: rgba(45, 206, 137, 0.08);
+}
+.color-group-2.option-group {
+  background-color: rgba(45, 206, 137, 0.15);
+}
+
+.color-group-3 {
+  background-color: rgba(251, 99, 64, 0.08);
+}
+.color-group-3.option-group {
+  background-color: rgba(251, 99, 64, 0.15);
+}
+
+.color-group-4 {
+  background-color: rgba(130, 94, 228, 0.08);
+}
+.color-group-4.option-group {
+  background-color: rgba(130, 94, 228, 0.15);
+}
+
+/* 深色模式下的顏色組調整 */
+[data-theme="dark"] .color-group-1 {
+  background-color: rgba(94, 114, 228, 0.15);
+}
+[data-theme="dark"] .color-group-1.option-group {
+  background-color: rgba(94, 114, 228, 0.25);
+}
+
+[data-theme="dark"] .color-group-2 {
+  background-color: rgba(45, 206, 137, 0.15);
+}
+[data-theme="dark"] .color-group-2.option-group {
+  background-color: rgba(45, 206, 137, 0.25);
+}
+
+[data-theme="dark"] .color-group-3 {
+  background-color: rgba(251, 99, 64, 0.15);
+}
+[data-theme="dark"] .color-group-3.option-group {
+  background-color: rgba(251, 99, 64, 0.25);
+}
+
+[data-theme="dark"] .color-group-4 {
+  background-color: rgba(130, 94, 228, 0.15);
+}
+[data-theme="dark"] .color-group-4.option-group {
+  background-color: rgba(130, 94, 228, 0.25);
+}
+
+/* 深色模式下的選項組標題 */
+[data-theme="dark"] .el-select-dropdown__item.option-group {
+  font-weight: 700;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* 深色模式下的價格顯示 */
+[data-theme="dark"] .option-price {
+  color: #52c41a;
+  font-weight: 700;
+}
+
+/* 空商品選項樣式 */
+.empty-option {
+  background-color: rgba(245, 54, 92, 0.05) !important;
+  border-left: 3px solid var(--danger-color);
+}
+
+.empty-text {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* 深色模式下的空商品選項 */
+[data-theme="dark"] .empty-option {
+  background-color: rgba(245, 54, 92, 0.1) !important;
+}
+
+[data-theme="dark"] .empty-text {
+  color: var(--text-muted);
+}
+
+/* 空品項警告樣式 */
+.empty-warning {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(245, 54, 92, 0.1);
+  border: 1px solid rgba(245, 54, 92, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--danger-color);
+  font-size: 0.875rem;
+  margin-top: var(--spacing-md);
+}
+
+.empty-icon {
+  color: var(--danger-color);
+  margin-left: var(--spacing-sm);
+}
+
+/* 深色模式下的空品項警告 */
+[data-theme="dark"] .empty-warning {
+  background: rgba(245, 54, 92, 0.15);
+  border-color: rgba(245, 54, 92, 0.3);
+}
+
+/* 側邊欄選項 */
+.selected-item {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-fast);
+}
+
+.selected-item:hover {
+  border-color: var(--primary-color);
+  transform: translateX(2px);
+}
+
+.selected-item-type {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.selected-item-name {
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: var(--spacing-xs) 0;
+}
+
+.selected-item-price {
+  color: var(--success-color);
+  font-weight: 600;
+}
+
+/* 按鈕樣式補充 */
+.btn-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-primary);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.btn-block {
+  width: 100%;
+  justify-content: center;
+}
+
+/* 更新信息 */
+.update-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+/* 警告提示 */
+.alert {
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.alert-danger {
+  background: rgba(245, 54, 92, 0.1);
+  color: var(--danger-color);
+  border: 1px solid rgba(245, 54, 92, 0.2);
+}
+
+/* 配置管理對話框 */
+.config-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.config-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-sm);
+  border: 1px solid var(--border-color);
+}
+
+.config-item:hover {
+  border-color: var(--primary-color);
+}
+
+.config-info h4 {
+  margin: 0 0 var(--spacing-xs) 0;
+  color: var(--text-primary);
+}
+
+.config-info p {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.config-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+/* Element Plus 覆蓋樣式 */
+.el-dialog {
+  --el-dialog-bg-color: var(--bg-secondary);
+  --el-text-color-primary: var(--text-primary);
+  border-radius: var(--radius-lg);
+}
+
+.el-message-box {
+  --el-messagebox-bg-color: var(--bg-secondary);
+  --el-text-color-primary: var(--text-primary);
+  border-radius: var(--radius-lg);
+}
+
+/* 下拉選單高度設定 */
+.el-select-dropdown {
+  max-height: 600px !important; /* 增加最大高度 */
+}
+
+.el-select-dropdown__wrap {
+  max-height: 590px !important; /* 扣除 padding 的高度 */
+}
+
+.el-select-dropdown__list {
+  max-height: 590px !important;
+}
+
+/* 優化滾動條樣式 */
+.el-select-dropdown__wrap::-webkit-scrollbar {
+  width: 8px;
+}
+
+.el-select-dropdown__wrap::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+.el-select-dropdown__wrap::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.el-select-dropdown__wrap::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* 深色模式下的滾動條 */
+[data-theme="dark"] .el-select-dropdown__wrap::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+[data-theme="dark"] .el-select-dropdown__wrap::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+}
+
+[data-theme="dark"] .el-select-dropdown__wrap::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* 在較小螢幕上調整高度 */
+@media (max-height: 800px) {
+  .el-select-dropdown {
+    max-height: 450px !important;
+  }
+  
+  .el-select-dropdown__wrap,
+  .el-select-dropdown__list {
+    max-height: 440px !important;
+  }
+}
+
+@media (max-height: 600px) {
+  .el-select-dropdown {
+    max-height: 350px !important;
+  }
+  
+  .el-select-dropdown__wrap,
+  .el-select-dropdown__list {
+    max-height: 340px !important;
+  }
+}
+
+/* 深色模式下的 Element Plus 下拉選單 */
+[data-theme="dark"] .el-select-dropdown {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .el-select-dropdown__item {
+  color: var(--text-primary);
+  background: transparent;
+}
+
+[data-theme="dark"] .el-select-dropdown__item:not(.is-disabled):hover {
+  background-color: var(--bg-tertiary);
+  color: var(--primary-color);
+}
+
+[data-theme="dark"] .el-select-dropdown__item.selected {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+[data-theme="dark"] .el-select-dropdown__item.selected:not(.is-disabled):hover {
+  background-color: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .el-select-dropdown__item.is-disabled {
+  color: var(--text-muted);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+[data-theme="dark"] .el-select-dropdown__item.is-disabled.option-group {
+  opacity: 1;
+  cursor: default;
+}
+
+/* 確保禁用項目的文字在深色模式下可見 */
+[data-theme="dark"] .el-select-dropdown__item.is-disabled:not(.option-group) {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="dark"] .el-popper__arrow::before {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+/* 深色模式下的輸入框 */
+[data-theme="dark"] .el-input__inner {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .el-input__inner:hover {
+  border-color: var(--primary-color);
+}
+
+[data-theme="dark"] .el-input__inner:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(123, 143, 255, 0.2);
+}
+
+/* 深色模式下的價格標籤 */
+[data-theme="dark"] .price-tag {
+  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* 深色模式下的卡片 */
+[data-theme="dark"] .card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* 深色模式下的按鈕 */
+[data-theme="dark"] .btn-primary {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .btn-primary:hover {
+  box-shadow: 0 4px 12px rgba(123, 143, 255, 0.4);
+}
+
+/* 深色模式下的總價顯示 */
+[data-theme="dark"] .total-price {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .grand-total-display {
+  color: #52c41a;
+}
+
+/* 響應式補充 */
+.d-md-none {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .d-md-none {
+    display: inline-flex;
+  }
+  
+  .selection-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .selection-actions {
+    justify-content: space-between;
+    margin-top: var(--spacing-sm);
+  }
+  
+  .component-total {
+    font-size: 1rem;
+  }
+}
+
+/* ===== 工具類 ===== */
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-muted { color: var(--text-muted); }
+.mb-0 { margin-bottom: 0; }
+.mb-1 { margin-bottom: var(--spacing-sm); }
+.mb-2 { margin-bottom: var(--spacing-md); }
+.mb-3 { margin-bottom: var(--spacing-lg); }
+.mt-2 { margin-top: var(--spacing-md); }
+.mt-3 { margin-top: var(--spacing-lg); }

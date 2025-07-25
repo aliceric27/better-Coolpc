@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PCBUYBUY</title>
+    <!-- 引入 Element Plus -->
+    <link
+    rel="stylesheet"
+    href="//cdn.jsdelivr.net/npm/element-plus/dist/index.css"
+  />
+  <!-- Import Vue 3 -->
+  <script src="//cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+  <!-- Import component library -->
+  <script src="//cdn.jsdelivr.net/npm/element-plus"></script>
+  <script src="//cdn.jsdelivr.net/npm/@element-plus/icons-vue"></script>
+    <link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+    <div id="app">
+        <div id="loading">
+            <div v-if="error" class="alert alert-danger" role="alert">
+                無法載入資料，請稍後再試
+                <br>
+                <small class="text-muted">{{ error }}</small>
+            </div>
+            <div v-if="loading" class="loading-container">
+                <div class="loading-spinner"></div>
+                <div>{{loadingStatus}}</div>
+            </div>
+            <div v-if="componentsData">
+                <div v-if="updateTime" class="update-time">更新時間: {{ updateTime }}</div>
+                <el-row v-for="component in componentsData" 
+                       :key="component.title" 
+                       class="component-row">
+                    <el-col :xs="4" :sm="6" class="component-title">
+                        <span>{{ component.title }}</span>
+                    </el-col>
+                    <el-col :xs="20" :sm="18">
+                        <div class="component-container" v-for="(selection, index) in getComponentSelections(component.title)" :key="index">
+                            <el-select
+                                v-model="selection.value"
+                                :placeholder="'請選擇' + component.title"
+                                filterable
+                                class="component-select"
+                                clearable
+                                value-key="id"
+                                @change="() => handleSelectionChange(component.title, index)">
+                                <template #default="{ item }">
+                                    <el-option
+                                        v-for="item in component.data"
+                                        :key="item.id"
+                                        :label="item.name"
+                                        :value="item"
+                                        :disabled="item.price === null || item.isGroup"
+                                        :class="{ 
+                                            'bundle-price': item.name.includes('搭購價'),
+                                            'option-group': item.isGroup,
+                                            [`color-group-${item.colorGroup}`]: item.colorGroup > 0
+                                        }">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <span>{{ item.name }}</span>
+                                            <span v-if="item.price" style="color: #67C23A; font-weight: bold;">
+                                                ${{ item.price.toLocaleString() }}
+                                            </span>
+                                        </div>
+                                    </el-option>
+                                </template>
+                            </el-select>
+                            <div class="price-display" v-if="selection.value && selection.value.price">
+                                ${{ selection.value.price.toLocaleString() }}
+                            </div>
+                            <div class="selection-controls">
+                                <el-icon 
+                                @click="addSelection(component.title)"
+                                v-if="index === getComponentSelections(component.title).length - 1"
+                                color="#67C23A"
+                                >
+
+                                <Plus />
+                            </el-icon>
+                                <el-icon 
+                                @click="removeSelection(component.title, index)" 
+                                v-if="getComponentSelections(component.title).length > 1"
+                                color="red"
+                                >
+                                <Minus />
+                            </el-icon>
+                            </div>
+                        </div>
+                        <div class="total-price-display" v-if="calculateComponentTotal(component.title) > 0">
+                            總額: ${{ calculateComponentTotal(component.title).toLocaleString() }}
+                        </div>
+                    </el-col>
+                </el-row>
+                
+                <!-- 新增總金額顯示 -->
+                <el-row class="grand-total-row" v-if="calculateGrandTotal() > 0">
+                    <el-col :span="24">
+                        <div class="grand-total-display">
+                            總金額: ${{ calculateGrandTotal().toLocaleString() }}
+                        </div>
+                    </el-col>
+                </el-row>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted} = Vue;
+
+        const app = createApp({
+            setup() {
+                const API_URL = "https://pcbuybuy.aliceric27.workers.dev/coolpc";
+                const componentsData = ref(null);
+                const error = ref(null);
+                const loading = ref(true);
+                const selectedComponents = ref({});
+                const updateTime = ref(null);
+
+                const processComponentData = (html, selector, componentType) => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    const select = doc.querySelector(selector);
+                    const data = [];
+                    let currentColorGroup = 0;
+
+                    if (!select) {
+                        console.error(`找不到 ${componentType} 的選擇器`);
+                        return null;
+                    }
+
+                    // 處理所有子元素
+                    select.childNodes.forEach(node => {
+                        if (node.nodeName === 'OPTGROUP') {
+                            // 更新顏色組
+                            currentColorGroup = (currentColorGroup % 4) + 1;
+                            
+                            // 添加組標題
+                            data.push({
+                                id: `group_${node.label}`,
+                                name: node.label,
+                                price: null,
+                                isGroup: true,
+                                colorGroup: currentColorGroup
+                            });
+                            
+                            // 處理組內的選項
+                            node.querySelectorAll('option').forEach(option => {
+                                const value = option.value;
+                                if (value === '0' || !value) return;
+
+                                const text = option.textContent;
+                                const priceMatch = text.match(/\$([0-9,]+)/);
+                                const price = priceMatch ? parseInt(priceMatch[1].replace(',', '')) : null;
+
+                                data.push({
+                                    id: value,
+                                    name: text.split(',')[0].trim(),
+                                    price: price,
+                                    isGroup: false,
+                                    colorGroup: currentColorGroup
+                                });
+                            });
+                        } else if (node.nodeName === 'OPTION') {
+                            const value = node.value;
+                            if (value === '0' || !value) return;
+
+                            const text = node.textContent;
+                            const priceMatch = text.match(/\$([0-9,]+)/);
+                            const price = priceMatch ? parseInt(priceMatch[1].replace(',', '')) : null;
+
+                            data.push({
+                                id: value,
+                                name: text.split(',')[0].trim(),
+                                price: price,
+                                isGroup: false,
+                                colorGroup: 0  // 非組內選項不設置顏色
+                            });
+                        }
+                    });
+                    return { [componentType]: data };
+                };
+
+                const fetchData = async () => {
+                    try {
+                        loading.value = true;
+                        error.value = null;
+                        
+                        const response = await fetch(API_URL);
+                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                        const html = await response.text();
+                        
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        
+                        const categories = doc.querySelectorAll('.t');
+                        console.log(doc.querySelector('#Mdy').innerText);
+                        const updateTimeText = doc.querySelector('#Mdy').innerText;
+                        const dateTimeMatch = updateTimeText.match(/(\d{4})\/(\d{1,2})\/(\d{1,2}) (\d{1,2}):(\d{2})/);
+                        updateTime.value = dateTimeMatch ? 
+                            `${dateTimeMatch[1]}/${String(dateTimeMatch[2]).padStart(2, '0')}/${String(dateTimeMatch[3]).padStart(2, '0')} ${dateTimeMatch[4]}:${dateTimeMatch[5]}` : 
+                            '更新時間格式錯誤';
+                        const allData = [];
+                        
+                        for (let i = 0; i < categories.length; i++) {
+                            const componentType = categories[i].textContent.trim();
+                            const selector = `#tbdy > tr:nth-child(${i+1}) > td:nth-child(3) > select`;
+                            const componentData = processComponentData(html, selector, componentType);
+                            if(componentData!==null){
+                            allData.push({
+                                title: componentType,
+                                data: componentData[componentType]
+                                });
+                            }
+                        }
+
+                        componentsData.value = allData;
+                    } catch (err) {
+                        error.value = err.message;
+                        console.error('Error fetching data:', err);
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+
+                onMounted(() => {
+                    fetchData();
+                });
+
+                // 獲取組件的所有選擇
+                const getComponentSelections = (componentTitle) => {
+                    if (!selectedComponents.value[componentTitle]) {
+                        selectedComponents.value[componentTitle] = [{value: null}];
+                    }
+                    return selectedComponents.value[componentTitle];
+                };
+
+                // 添加新的選擇欄位
+                const addSelection = (componentTitle) => {
+                    selectedComponents.value[componentTitle].push({value: null});
+                };
+
+                // 移除選擇欄位
+                const removeSelection = (componentTitle, index) => {
+                    selectedComponents.value[componentTitle].splice(index, 1);
+                };
+
+                // 處理選擇變更
+                const handleSelectionChange = (componentTitle, index) => {
+                    // 可以在這裡添加額外的邏輯
+                };
+
+                // 計算單個組件的總金額
+                const calculateComponentTotal = (componentTitle) => {
+                    const selections = selectedComponents.value[componentTitle] || [];
+                    return selections.reduce((total, selection) => {
+                        return total + (selection.value?.price || 0);
+                    }, 0);
+                };
+
+                // 計算所有組件的總金額
+                const calculateGrandTotal = () => {
+                    if (!componentsData.value) return 0;
+                    
+                    return componentsData.value.reduce((total, component) => {
+                        return total + calculateComponentTotal(component.title);
+                    }, 0);
+                };
+
+                return {
+                    componentsData,
+                    error,
+                    loading,
+                    selectedComponents,
+                    updateTime,
+                    getComponentSelections,
+                    addSelection,
+                    removeSelection,
+                    handleSelectionChange,
+                    calculateComponentTotal,
+                    calculateGrandTotal
+                };
+            }
+        });
+
+        // 使用 Element Plus
+        app.use(ElementPlus);
+        for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+            app.component(key, component)
+        }
+        app.mount('#app');
+    </script>
+</body>
+</html>

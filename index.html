@@ -3,122 +3,297 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PCBUYBUY</title>
-    <!-- 引入 Element Plus -->
-    <link
-    rel="stylesheet"
-    href="//cdn.jsdelivr.net/npm/element-plus/dist/index.css"
-  />
-  <!-- Import Vue 3 -->
-  <script src="//cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
-  <!-- Import component library -->
-  <script src="//cdn.jsdelivr.net/npm/element-plus"></script>
-  <script src="//cdn.jsdelivr.net/npm/@element-plus/icons-vue"></script>
-    <link rel="stylesheet" href="style.css">
-
+    <title>PCBUYBUY - 智慧電腦配置工具</title>
+    <meta name="description" content="更好的 PC 組裝配置工具，提供即時價格計算和智慧推薦">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%235e72e4'/><text x='16' y='22' text-anchor='middle' fill='white' font-family='Arial' font-size='18' font-weight='bold'>P</text></svg>">
+    
+    <!-- Element Plus -->
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/element-plus/dist/index.css" />
+    
+    <!-- Modern Styles -->
+    <link rel="stylesheet" href="modern-style.css">
+    
+    <!-- Vue 3 -->
+    <script src="//cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/element-plus"></script>
+    <script src="//cdn.jsdelivr.net/npm/@element-plus/icons-vue"></script>
 </head>
 <body>
     <div id="app">
-        <div id="loading">
-            <div v-if="error" class="alert alert-danger" role="alert">
-                無法載入資料，請稍後再試
-                <br>
-                <small class="text-muted">{{ error }}</small>
-            </div>
-            <div v-if="loading" class="loading-container">
-                <div class="loading-spinner"></div>
-                <div>{{loadingStatus}}</div>
-            </div>
-            <div v-if="componentsData">
-                <div v-if="updateTime" class="update-time">更新時間: {{ updateTime }}</div>
-                <el-row v-for="component in componentsData" 
-                       :key="component.title" 
-                       class="component-row">
-                    <el-col :xs="4" :sm="6" class="component-title">
-                        <span>{{ component.title }}</span>
-                    </el-col>
-                    <el-col :xs="20" :sm="18">
-                        <div class="component-container" v-for="(selection, index) in getComponentSelections(component.title)" :key="index">
-                            <el-select
-                                v-model="selection.value"
-                                :placeholder="'請選擇' + component.title"
-                                filterable
-                                class="component-select"
-                                clearable
-                                value-key="id"
-                                @change="() => handleSelectionChange(component.title, index)">
-                                <template #default="{ item }">
-                                    <el-option
-                                        v-for="item in component.data"
-                                        :key="item.id"
-                                        :label="item.name"
-                                        :value="item"
-                                        :disabled="item.price === null || item.isGroup"
-                                        :class="{ 
-                                            'bundle-price': item.name.includes('搭購價'),
-                                            'option-group': item.isGroup,
-                                            [`color-group-${item.colorGroup}`]: item.colorGroup > 0
-                                        }">
-                                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                                            <span>{{ item.name }}</span>
-                                            <span v-if="item.price" style="color: #67C23A; font-weight: bold;">
-                                                ${{ item.price.toLocaleString() }}
-                                            </span>
-                                        </div>
-                                    </el-option>
-                                </template>
-                            </el-select>
-                            <div class="price-display" v-if="selection.value && selection.value.price">
-                                ${{ selection.value.price.toLocaleString() }}
-                            </div>
-                            <div class="selection-controls">
-                                <el-icon 
-                                @click="addSelection(component.title)"
-                                v-if="index === getComponentSelections(component.title).length - 1"
-                                color="#67C23A"
-                                >
-
-                                <Plus />
-                            </el-icon>
-                                <el-icon 
-                                @click="removeSelection(component.title, index)" 
-                                v-if="getComponentSelections(component.title).length > 1"
-                                color="red"
-                                >
-                                <Minus />
-                            </el-icon>
-                            </div>
-                        </div>
-                        <div class="total-price-display" v-if="calculateComponentTotal(component.title) > 0">
-                            總額: ${{ calculateComponentTotal(component.title).toLocaleString() }}
-                        </div>
-                    </el-col>
-                </el-row>
+        <!-- 導航欄 -->
+        <nav class="navbar">
+            <div class="navbar-container">
+                <a href="#" class="navbar-brand">
+                    <div class="navbar-logo">P</div>
+                    <span>PCBUYBUY</span>
+                </a>
                 
-                <!-- 新增總金額顯示 -->
-                <el-row class="grand-total-row" v-if="calculateGrandTotal() > 0">
-                    <el-col :span="24">
-                        <div class="grand-total-display">
-                            總金額: ${{ calculateGrandTotal().toLocaleString() }}
-                        </div>
-                    </el-col>
-                </el-row>
+                <div class="navbar-actions">
+                    <button class="btn btn-icon" @click="toggleTheme" title="切換主題">
+                        <el-icon v-if="theme === 'light'"><Moon /></el-icon>
+                        <el-icon v-else><Sunny /></el-icon>
+                    </button>
+                    <button class="btn btn-icon" @click="showConfigMenu = true" title="配置管理">
+                        <el-icon><Document /></el-icon>
+                    </button>
+                    <button class="btn btn-icon" @click="shareConfig" title="分享配置">
+                        <el-icon><Share /></el-icon>
+                    </button>
+                    <button class="btn btn-icon d-md-none" @click="sidebarActive = !sidebarActive">
+                        <el-icon><Menu /></el-icon>
+                    </button>
+                </div>
             </div>
+        </nav>
+
+        <!-- 主容器 -->
+        <div class="main-container">
+            <!-- 側邊欄 -->
+            <aside class="sidebar" :class="{ active: sidebarActive }">
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">配置摘要</h3>
+                    <div class="total-price">
+                        <div class="total-price-label">總金額</div>
+                        <div class="total-price-value">
+                            ${{ calculateGrandTotal().toLocaleString() }}
+                        </div>
+                    </div>
+                    
+                    <!-- 空品項警告 -->
+                    <div v-if="emptyComponentsCount > 0" class="empty-warning">
+                        <el-icon><WarningFilled /></el-icon>
+                        <span>{{ emptyComponentsCount }} 個類別暫無商品</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-section" v-if="hasSelectedItems">
+                    <h3 class="sidebar-title">已選配件</h3>
+                    <transition-group name="slide" tag="div">
+                        <div v-for="(component, index) in selectedItemsList" 
+                             :key="`${component.type}-${index}`"
+                             class="selected-item">
+                            <div class="selected-item-type">{{ component.type }}</div>
+                            <div class="selected-item-name">{{ component.name }}</div>
+                            <div class="selected-item-price">${{ component.price.toLocaleString() }}</div>
+                        </div>
+                    </transition-group>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">快速操作</h3>
+                    <button class="btn btn-primary btn-block mb-2" @click="saveConfig">
+                        <el-icon><DocumentAdd /></el-icon>
+                        <span>保存配置</span>
+                    </button>
+                    <button class="btn btn-secondary btn-block" @click="clearAll">
+                        <el-icon><Delete /></el-icon>
+                        <span>清空配置</span>
+                    </button>
+                </div>
+            </aside>
+
+            <!-- 主內容區 -->
+            <main class="main-content">
+                <!-- 載入狀態 -->
+                <transition name="fade">
+                    <div v-if="loading" class="loading-overlay">
+                        <div class="loading-card">
+                            <div class="loading-spinner"></div>
+                            <p>{{ loadingStatus }}</p>
+                        </div>
+                    </div>
+                </transition>
+
+                <!-- 錯誤提示 -->
+                <transition name="fade">
+                    <div v-if="error" class="alert alert-danger mb-3">
+                        <el-icon><WarningFilled /></el-icon>
+                        <span>{{ error }}</span>
+                    </div>
+                </transition>
+
+                <!-- 更新時間 -->
+                <div v-if="updateTime" class="update-info mb-3">
+                    <el-icon><Clock /></el-icon>
+                    <span>資料更新時間：{{ updateTime }}</span>
+                </div>
+
+                <!-- 組件選擇區 -->
+                <transition-group name="fade" tag="div">
+                    <div v-for="component in componentsData" 
+                         :key="component.title"
+                         class="card component-card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                {{ component.title }}
+                                <el-icon v-if="isComponentEmpty(component.title)" class="empty-icon" title="暫無商品">
+                                    <WarningFilled />
+                                </el-icon>
+                            </h3>
+                            <span class="component-total" v-if="calculateComponentTotal(component.title) > 0">
+                                ${{ calculateComponentTotal(component.title).toLocaleString() }}
+                            </span>
+                        </div>
+                        
+                        <div class="card-body">
+                            <transition-group name="fade" tag="div">
+                                <div v-for="(selection, index) in getComponentSelections(component.title)" 
+                                     :key="`selection-${index}`"
+                                     class="selection-row">
+                                    <div class="modern-select">
+                                        <el-select
+                                            v-model="selection.value"
+                                            :placeholder="`選擇${component.title}`"
+                                            filterable
+                                            clearable
+                                            value-key="id"
+                                            @change="() => handleSelectionChange(component.title, index)">
+                                            <el-option
+                                                v-for="item in component.data"
+                                                :key="item.id"
+                                                :label="item.name"
+                                                :value="item"
+                                                :disabled="item.price === null || item.isGroup || item.isEmpty"
+                                                :class="{ 
+                                                    'option-group': item.isGroup,
+                                                    'empty-option': item.isEmpty,
+                                                    [`color-group-${item.colorGroup}`]: item.colorGroup > 0
+                                                }">
+                                                <div class="option-content">
+                                                    <span class="option-name" :class="{ 'empty-text': item.isEmpty }">
+                                                        {{ item.name }}
+                                                        <el-icon v-if="item.isEmpty" style="margin-left: 8px;"><WarningFilled /></el-icon>
+                                                    </span>
+                                                    <span v-if="item.price" class="option-price">
+                                                        ${{ item.price.toLocaleString() }}
+                                                    </span>
+                                                </div>
+                                            </el-option>
+                                        </el-select>
+                                    </div>
+                                    
+                                    <div class="selection-actions">
+                                        <span v-if="selection.value && selection.value.price" class="price-tag">
+                                            ${{ selection.value.price.toLocaleString() }}
+                                        </span>
+                                        <button 
+                                            class="btn btn-icon btn-sm"
+                                            @click="addSelection(component.title)"
+                                            v-if="index === getComponentSelections(component.title).length - 1"
+                                            title="新增選項">
+                                            <el-icon><Plus /></el-icon>
+                                        </button>
+                                        <button 
+                                            class="btn btn-icon btn-sm btn-danger"
+                                            @click="removeSelection(component.title, index)"
+                                            v-if="getComponentSelections(component.title).length > 1"
+                                            title="移除選項">
+                                            <el-icon><Minus /></el-icon>
+                                        </button>
+                                    </div>
+                                </div>
+                            </transition-group>
+                        </div>
+                    </div>
+                </transition-group>
+            </main>
         </div>
+
+        <!-- 配置管理對話框 -->
+        <el-dialog 
+            v-model="showConfigMenu" 
+            title="配置管理"
+            width="600px">
+            <div class="config-list">
+                <div v-for="(config, index) in savedConfigs" 
+                     :key="index"
+                     class="config-item">
+                    <div class="config-info">
+                        <h4>{{ config.name }}</h4>
+                        <p class="text-muted">{{ config.date }} - ${{ config.total.toLocaleString() }}</p>
+                    </div>
+                    <div class="config-actions">
+                        <el-button @click="loadConfig(index)" type="primary" size="small">載入</el-button>
+                        <el-button @click="deleteConfig(index)" type="danger" size="small">刪除</el-button>
+                    </div>
+                </div>
+                <div v-if="savedConfigs.length === 0" class="text-center text-muted">
+                    尚無儲存的配置
+                </div>
+            </div>
+        </el-dialog>
     </div>
 
     <script>
-        const { createApp, ref, onMounted} = Vue;
+        const { createApp, ref, computed, onMounted, watch } = Vue;
+        const { ElMessage, ElMessageBox } = ElementPlus;
 
         const app = createApp({
             setup() {
+                // API 設定
                 const API_URL = "https://pcbuybuy.aliceric27.workers.dev/coolpc";
-                const componentsData = ref(null);
+                
+                // 狀態管理
+                const componentsData = ref([]);
+                const selectedComponents = ref({});
                 const error = ref(null);
                 const loading = ref(true);
-                const selectedComponents = ref({});
+                const loadingStatus = ref('正在載入資料...');
                 const updateTime = ref(null);
+                const theme = ref('light');
+                const sidebarActive = ref(false);
+                const showConfigMenu = ref(false);
+                const savedConfigs = ref([]);
 
+                // 初始化主題
+                onMounted(() => {
+                    // 檢查系統主題偏好
+                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    const savedTheme = localStorage.getItem('theme') || (prefersDark ? 'dark' : 'light');
+                    theme.value = savedTheme;
+                    document.documentElement.setAttribute('data-theme', savedTheme);
+                    
+                    // 載入已儲存的配置
+                    const saved = localStorage.getItem('savedConfigs');
+                    if (saved) {
+                        savedConfigs.value = JSON.parse(saved);
+                    }
+                    
+                    // 載入資料
+                    fetchData().then(() => {
+                        // 資料載入完成後，檢查 URL 中是否有分享的配置
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const sharedConfig = urlParams.get('config');
+                        if (sharedConfig) {
+                            try {
+                                // 解碼配置
+                                const base64 = decodeURIComponent(sharedConfig);
+                                const encodedStr = atob(base64);
+                                const configStr = decodeURIComponent(encodedStr);
+                                const config = JSON.parse(configStr);
+                                
+                                selectedComponents.value = config;
+                                ElMessage.success('已載入分享的配置');
+                                
+                                // 清除 URL 參數，避免重複載入
+                                window.history.replaceState({}, document.title, window.location.pathname);
+                            } catch (err) {
+                                console.error('解析分享配置時發生錯誤:', err);
+                                ElMessage.error('無法載入分享的配置');
+                            }
+                        }
+                    });
+                });
+
+                // 監聽主題變化
+                watch(theme, (newTheme) => {
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                });
+
+                // 處理組件資料
                 const processComponentData = (html, selector, componentType) => {
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
@@ -132,13 +307,10 @@
                         return null;
                     }
 
-                    // 處理所有子元素
                     select.childNodes.forEach(node => {
                         if (node.nodeName === 'OPTGROUP') {
-                            // 更新顏色組
                             currentColorGroup = (currentColorGroup % 4) + 1;
                             
-                            // 添加組標題
                             data.push({
                                 id: `group_${node.label}`,
                                 name: node.label,
@@ -147,7 +319,6 @@
                                 colorGroup: currentColorGroup
                             });
                             
-                            // 處理組內的選項
                             node.querySelectorAll('option').forEach(option => {
                                 const value = option.value;
                                 if (value === '0' || !value) return;
@@ -177,60 +348,79 @@
                                 name: text.split(',')[0].trim(),
                                 price: price,
                                 isGroup: false,
-                                colorGroup: 0  // 非組內選項不設置顏色
+                                colorGroup: 0
                             });
                         }
                     });
+                    
+                    // 檢查是否有有效的選項（排除組標題）
+                    const validOptions = data.filter(item => !item.isGroup && item.price !== null);
+                    
+                    // 如果沒有任何有效選項，添加一個提示項
+                    if (validOptions.length === 0) {
+                        data.push({
+                            id: 'empty_' + componentType,
+                            name: '暫無商品',
+                            price: null,
+                            isGroup: false,
+                            colorGroup: 0,
+                            isEmpty: true
+                        });
+                    }
+                    
                     return { [componentType]: data };
                 };
 
+                // 載入資料
                 const fetchData = async () => {
                     try {
                         loading.value = true;
+                        loadingStatus.value = '正在連接伺服器...';
                         error.value = null;
                         
                         const response = await fetch(API_URL);
                         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                        
+                        loadingStatus.value = '正在解析資料...';
                         const html = await response.text();
                         
                         const parser = new DOMParser();
                         const doc = parser.parseFromString(html, 'text/html');
                         
                         const categories = doc.querySelectorAll('.t');
-                        console.log(doc.querySelector('#Mdy').innerText);
-                        const updateTimeText = doc.querySelector('#Mdy').innerText;
+                        const updateTimeText = doc.querySelector('#Mdy')?.innerText || '';
                         const dateTimeMatch = updateTimeText.match(/(\d{4})\/(\d{1,2})\/(\d{1,2}) (\d{1,2}):(\d{2})/);
                         updateTime.value = dateTimeMatch ? 
                             `${dateTimeMatch[1]}/${String(dateTimeMatch[2]).padStart(2, '0')}/${String(dateTimeMatch[3]).padStart(2, '0')} ${dateTimeMatch[4]}:${dateTimeMatch[5]}` : 
                             '更新時間格式錯誤';
+                        
                         const allData = [];
                         
                         for (let i = 0; i < categories.length; i++) {
                             const componentType = categories[i].textContent.trim();
                             const selector = `#tbdy > tr:nth-child(${i+1}) > td:nth-child(3) > select`;
                             const componentData = processComponentData(html, selector, componentType);
-                            if(componentData!==null){
-                            allData.push({
-                                title: componentType,
-                                data: componentData[componentType]
+                            if (componentData !== null) {
+                                allData.push({
+                                    title: componentType,
+                                    data: componentData[componentType]
                                 });
                             }
                         }
 
                         componentsData.value = allData;
+                        loadingStatus.value = '載入完成！';
+                        return true; // 返回成功狀態
                     } catch (err) {
                         error.value = err.message;
                         console.error('Error fetching data:', err);
+                        return false; // 返回失敗狀態
                     } finally {
                         loading.value = false;
                     }
                 };
 
-                onMounted(() => {
-                    fetchData();
-                });
-
-                // 獲取組件的所有選擇
+                // 獲取組件選擇
                 const getComponentSelections = (componentTitle) => {
                     if (!selectedComponents.value[componentTitle]) {
                         selectedComponents.value[componentTitle] = [{value: null}];
@@ -238,22 +428,7 @@
                     return selectedComponents.value[componentTitle];
                 };
 
-                // 添加新的選擇欄位
-                const addSelection = (componentTitle) => {
-                    selectedComponents.value[componentTitle].push({value: null});
-                };
-
-                // 移除選擇欄位
-                const removeSelection = (componentTitle, index) => {
-                    selectedComponents.value[componentTitle].splice(index, 1);
-                };
-
-                // 處理選擇變更
-                const handleSelectionChange = (componentTitle, index) => {
-                    // 可以在這裡添加額外的邏輯
-                };
-
-                // 計算單個組件的總金額
+                // 計算組件總額
                 const calculateComponentTotal = (componentTitle) => {
                     const selections = selectedComponents.value[componentTitle] || [];
                     return selections.reduce((total, selection) => {
@@ -261,7 +436,7 @@
                     }, 0);
                 };
 
-                // 計算所有組件的總金額
+                // 計算總金額
                 const calculateGrandTotal = () => {
                     if (!componentsData.value) return 0;
                     
@@ -270,18 +445,162 @@
                     }, 0);
                 };
 
+                // 已選配件列表
+                const selectedItemsList = computed(() => {
+                    const items = [];
+                    for (const [type, selections] of Object.entries(selectedComponents.value)) {
+                        selections.forEach(selection => {
+                            if (selection.value && selection.value.price) {
+                                items.push({
+                                    type,
+                                    name: selection.value.name,
+                                    price: selection.value.price
+                                });
+                            }
+                        });
+                    }
+                    return items;
+                });
+
+                // 計算空品項統計
+                const emptyComponentsCount = computed(() => {
+                    if (!componentsData.value) return 0;
+                    return componentsData.value.filter(component => {
+                        const validOptions = component.data.filter(item => !item.isGroup && !item.isEmpty && item.price !== null);
+                        return validOptions.length === 0;
+                    }).length;
+                });
+
+                // 檢查組件是否為空
+                const isComponentEmpty = (componentTitle) => {
+                    const component = componentsData.value?.find(c => c.title === componentTitle);
+                    if (!component) return false;
+                    const validOptions = component.data.filter(item => !item.isGroup && !item.isEmpty && item.price !== null);
+                    return validOptions.length === 0;
+                };
+
+                // 是否有已選配件
+                const hasSelectedItems = computed(() => selectedItemsList.value.length > 0);
+
+                // 操作方法
+                const addSelection = (componentTitle) => {
+                    selectedComponents.value[componentTitle].push({value: null});
+                };
+
+                const removeSelection = (componentTitle, index) => {
+                    selectedComponents.value[componentTitle].splice(index, 1);
+                };
+
+                const handleSelectionChange = (componentTitle, index) => {
+                    // 可添加額外邏輯
+                };
+
+                const toggleTheme = () => {
+                    theme.value = theme.value === 'light' ? 'dark' : 'light';
+                };
+
+                const saveConfig = () => {
+                    const configName = prompt('請輸入配置名稱：');
+                    if (!configName) return;
+                    
+                    const config = {
+                        name: configName,
+                        date: new Date().toLocaleDateString(),
+                        total: calculateGrandTotal(),
+                        components: JSON.parse(JSON.stringify(selectedComponents.value))
+                    };
+                    
+                    savedConfigs.value.push(config);
+                    localStorage.setItem('savedConfigs', JSON.stringify(savedConfigs.value));
+                    ElMessage.success('配置已儲存');
+                };
+
+                const loadConfig = (index) => {
+                    const config = savedConfigs.value[index];
+                    selectedComponents.value = JSON.parse(JSON.stringify(config.components));
+                    showConfigMenu.value = false;
+                    ElMessage.success('配置已載入');
+                };
+
+                const deleteConfig = (index) => {
+                    savedConfigs.value.splice(index, 1);
+                    localStorage.setItem('savedConfigs', JSON.stringify(savedConfigs.value));
+                    ElMessage.success('配置已刪除');
+                };
+
+                const clearAll = () => {
+                    ElMessageBox.confirm('確定要清空所有配置嗎？', '確認', {
+                        confirmButtonText: '確定',
+                        cancelButtonText: '取消',
+                        type: 'warning',
+                    }).then(() => {
+                        selectedComponents.value = {};
+                        ElMessage.success('配置已清空');
+                    }).catch(() => {});
+                };
+
+                const shareConfig = () => {
+                    try {
+                        // 使用更穩定的編碼方式處理中文
+                        const configStr = JSON.stringify(selectedComponents.value);
+                        // 使用 encodeURIComponent 和 btoa 的組合
+                        const encodedStr = encodeURIComponent(configStr);
+                        const base64 = btoa(encodedStr);
+                        
+                        const url = `${window.location.origin}${window.location.pathname}?config=${encodeURIComponent(base64)}`;
+                        
+                        navigator.clipboard.writeText(url).then(() => {
+                            ElMessage.success('分享連結已複製到剪貼簿');
+                        }).catch((err) => {
+                            // 如果剪貼簿 API 不可用，提供備用方案
+                            const textArea = document.createElement('textarea');
+                            textArea.value = url;
+                            textArea.style.position = 'fixed';
+                            textArea.style.opacity = '0';
+                            document.body.appendChild(textArea);
+                            textArea.select();
+                            document.execCommand('copy');
+                            document.body.removeChild(textArea);
+                            ElMessage.success('分享連結已複製到剪貼簿');
+                        });
+                    } catch (err) {
+                        console.error('分享配置時發生錯誤:', err);
+                        ElMessage.error('無法生成分享連結');
+                    }
+                };
+
                 return {
+                    // 狀態
                     componentsData,
+                    selectedComponents,
                     error,
                     loading,
-                    selectedComponents,
+                    loadingStatus,
                     updateTime,
+                    theme,
+                    sidebarActive,
+                    showConfigMenu,
+                    savedConfigs,
+                    
+                    // 計算屬性
+                    selectedItemsList,
+                    hasSelectedItems,
+                    emptyComponentsCount,
+                    
+                    // 方法
                     getComponentSelections,
+                    calculateComponentTotal,
+                    calculateGrandTotal,
                     addSelection,
                     removeSelection,
                     handleSelectionChange,
-                    calculateComponentTotal,
-                    calculateGrandTotal
+                    toggleTheme,
+                    saveConfig,
+                    loadConfig,
+                    deleteConfig,
+                    clearAll,
+                    shareConfig,
+                    isComponentEmpty
                 };
             }
         });
@@ -289,7 +608,7 @@
         // 使用 Element Plus
         app.use(ElementPlus);
         for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-            app.component(key, component)
+            app.component(key, component);
         }
         app.mount('#app');
     </script>
