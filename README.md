@@ -51,7 +51,7 @@ better-Coolpc/
 [Coolpc](https://www.coolpc.com.tw/evaluate.php)
 
 ### 開放 API
-API `https://pcbuybuy.aliceric27.workers.dev`
+API `https://pcbuybuy.aliceric27.workers.dev/coolpc`
 
 ### 使用技術
 - 使用 Cloudflare Workers 取得資料
