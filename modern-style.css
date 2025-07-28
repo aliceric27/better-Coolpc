@@ -168,6 +168,7 @@ body {
   padding: var(--spacing-lg);
   overflow-y: auto;
   transition: transform var(--transition-base);
+  z-index: 999;
 }
 
 .sidebar-section {
@@ -735,6 +736,33 @@ body {
 
 .el-select-dropdown__list {
   max-height: 590px !important;
+}
+
+/* 下拉選單選項自動換行 */
+.el-select-dropdown__item {
+  white-space: normal !important;
+  height: auto !important;
+  line-height: 1.4 !important;
+  padding: 12px 16px !important;
+  min-height: 40px;
+}
+
+/* 選項內容換行設定 */
+.option-content {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.option-name {
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.4;
+  flex-basis: 100%;
+}
+
+.option-price {
+  margin-left: auto;
+  white-space: nowrap;
 }
 
 /* 優化滾動條樣式 */
