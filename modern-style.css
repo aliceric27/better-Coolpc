@@ -743,8 +743,6 @@ body {
   white-space: normal !important;
   height: auto !important;
   line-height: 1.4 !important;
-  padding: 12px 16px !important;
-  min-height: 40px;
 }
 
 /* 選項內容換行設定 */
