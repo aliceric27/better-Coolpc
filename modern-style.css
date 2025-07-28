@@ -749,7 +749,6 @@ body {
 
 /* 選項內容換行設定 */
 .option-content {
-  flex-wrap: wrap;
   gap: 8px;
 }
 
